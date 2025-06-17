@@ -25,15 +25,12 @@ class Konsole {
         this.container = container
         this.options = options
         this.buffer = []
-        this.prefix = options.prefix
-        this.commands = commands
-        this.variables = this.variables
         Object.assign(this.container.style, {
-            backgroundColor: backgroundColor,
-            color: textColor,
-            fontFamily: font,
-            width: width,
-            height: height,
+            backgroundColor: options.backgroundColor,
+            color: options.textColor,
+            fontFamily: options.font,
+            width: options.width,
+            height: options.height,
             overflowY: "scroll",
             whiteSpace: "pre-wrap",
             padding: "5px",
@@ -42,7 +39,7 @@ class Konsole {
         this.container.addEventListener("keydown", (event) => {
             if(event.key == "Enter") {
                 const inputText = this.buffer[this.buffer.length-1].slice(1,0)
-                this.buffer.push(this.prefix+inputText)
+                this.buffer.push(options.prefix+inputText)
                 this.runCommand(inputText)
             }
             this.buffer[this.buffer.length-1] += event.key
