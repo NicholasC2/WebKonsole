@@ -70,6 +70,7 @@ class Konsole {
         for (const command of this.options.commands) {
             if(command.alias.includes(alias)) {
                 command.run(alias, args)
+                this.buffer.push(this.options.prefix)
                 found = true
                 break;
             }
