@@ -54,7 +54,7 @@ class Konsole {
     }
 
     replaceVars(text = "") {
-        const variables = Object.entries(this.variables);
+        const variables = Object.entries(this.options.variables);
         variables.forEach((variable) => {
             const [key, value] = variable
             text = text.replaceAll(`{${key}}`, value)
@@ -67,7 +67,7 @@ class Konsole {
         const args = cmd.split(" ")
         const alias = args.shift()
         let found = false
-        for (const command of this.commands) {
+        for (const command of this.options.commands) {
             if(command.alias.includes(alias)) {
                 command.run(alias, args)
                 found = true
