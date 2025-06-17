@@ -74,7 +74,7 @@ class Konsole {
         let found = false
         for (const command of this.options.commands) {
             if(command.alias.includes(alias)) {
-                const output = await command.run(alias, args)
+                const output = command.run(alias, args)
                 if(output) {
                     this.buffer.push(output)
                 }
