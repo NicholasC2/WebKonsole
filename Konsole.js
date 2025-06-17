@@ -39,7 +39,7 @@ class Konsole {
         })
         window.addEventListener("keydown", (event) => {
             if(event.key == "Enter") {
-                const inputText = this.buffer[this.buffer.length-1].slice(1,0)
+                const inputText = this.buffer[this.buffer.length-1].slice(1,this.buffer[this.buffer.length-1].length)
                 this.buffer.push(options.prefix+inputText)
                 if(inputText.trim() != "") {
                     this.runCommand(inputText)
