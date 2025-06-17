@@ -6,12 +6,13 @@ class Konsole {
         backgroundColor: "black",
         font: "monospace",
         initCommand: "echo {version}",
-        prefix: "$",
+        prefix: "$ ",
         commands: [
             {
                 "alias": ["echo", "print"],
                 "run": (alias, args)=>{
                     this.buffer.push(args.join(" "))
+                    return
                 }
             }
         ],
@@ -40,9 +41,13 @@ class Konsole {
             if(event.key == "Enter") {
                 const inputText = this.buffer[this.buffer.length-1].slice(1,0)
                 this.buffer.push(options.prefix+inputText)
-                this.runCommand(inputText)
+                if(inputText.trim() != "") {
+                    this.runCommand(inputText)
+                }
             }
-            this.buffer[this.buffer.length-1] += event.key
+            if(event.key.length == 1) {
+                this.buffer[this.buffer.length-1] += event.key
+            }
             this.update()
         })
         this.runCommand(options.initCommand)
@@ -69,8 +74,10 @@ class Konsole {
         let found = false
         for (const command of this.options.commands) {
             if(command.alias.includes(alias)) {
-                command.run(alias, args)
-                this.buffer.push(this.options.prefix)
+                const return = await command.run(alias, args)
+                if(return) {
+                    this.buffer.push(return)
+                }
                 found = true
                 break;
             }
@@ -78,5 +85,6 @@ class Konsole {
         if(!found) {
             this.buffer.push(`Unknown command: ${alias}`)
         }
+        this.buffer.push(this.options.prefix)
     }
 }
