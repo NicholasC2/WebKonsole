@@ -36,7 +36,7 @@ class Konsole {
             padding: "5px",
             boxSizing: "border-box"
         })
-        this.container.addEventListener("keydown", (event) => {
+        window.addEventListener("keydown", (event) => {
             if(event.key == "Enter") {
                 const inputText = this.buffer[this.buffer.length-1].slice(1,0)
                 this.buffer.push(options.prefix+inputText)
