@@ -67,6 +67,8 @@ class Konsole {
         this.buffer = [];
         this.cursorVisible = true;
         this.blinkTime = 0;
+        this.history = [];
+        this.history_index = 0;
 
         setInterval(() => {
             if (this.blinkTime >= 500) {
@@ -91,6 +93,10 @@ class Konsole {
 
             if (event.key === "Enter") {
                 const inputText = currentLine.slice(this.options.prefix.length);
+                if(this.history[0] != inputText) {
+                    this.history.unshift(inputText);
+                    if(this.history_index != 0) this.history_index++;
+                }
                 await this.runCommand(inputText);
             } else if (event.key === "Backspace") {
                 if (event.shiftKey) {
@@ -102,6 +108,20 @@ class Konsole {
                 this.buffer = [this.options.prefix];
             } else if (event.key.length === 1 && !event.ctrlKey && !event.altKey) {
                 this.buffer[currentIndex] += event.key;
+            } else if(event.key == "ArrowUp") {
+                if(this.history.includes(this.buffer[currentIndex].slice(this.options.prefix.length, this.buffer[currentIndex].length)) || this.history_index == 0) this.history_index++;
+                if(this.history_index > this.history.length) this.history_index = this.history.length;
+                if(this.history_index == 0) return;
+                this.buffer[currentIndex] = this.options.prefix + this.history[this.history_index - 1]
+            } else if(event.key == "ArrowDown") {
+                if(this.history.includes(this.buffer[currentIndex].slice(this.options.prefix.length, this.buffer[currentIndex].length)) || this.history_index == 0) this.history_index-=1;
+                if(this.history_index < 0) this.history_index = 0;
+                if(this.history_index == 0) {
+                    this.buffer[currentIndex] = this.options.prefix
+                    this.update();
+                    return;
+                };
+                this.buffer[currentIndex] = this.options.prefix + this.history[this.history_index - 1]
             }
 
             this.update();
