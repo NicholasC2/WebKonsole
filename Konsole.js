@@ -50,6 +50,13 @@ class Konsole {
                         resolve(output)
                     })
                 }
+            },
+            {
+                "alias": ["version", "ver"],
+                "description": "displays version information",
+                "run": async() => {
+                    return Promise.resolve("{version}")
+                }
             }
         ],
         variables: {
