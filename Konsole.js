@@ -120,7 +120,7 @@ class Konsole {
             overflowY: "auto",
             whiteSpace: "pre-wrap",
             padding: "5px",
-            boxSizing: "border-box"
+            boxSizing: "border-box",
         });
 
         const output = this.buffer.join("\n");
