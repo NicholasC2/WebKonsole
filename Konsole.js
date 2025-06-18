@@ -35,7 +35,7 @@ class Konsole {
                 "alias": ["help"],
                 "run": async() => {
                     return new Promise(resolve => {
-                        let output = "help for {version}\n  commands:"
+                        let output = "help for {version}\n  commands:\n"
                         this.options.commands.forEach(command => {
                             if(command.description) {
                                 output += `   ${command.alias.join(" | ")} : "${command.description}"\n`
