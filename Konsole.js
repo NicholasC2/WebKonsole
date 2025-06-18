@@ -106,10 +106,9 @@ class Konsole {
 
     async runCommand(text) {
         for (var cmd of text.split("\n")) {
-            if (cmd.trim() === "") {
-                this.buffer.push("");
-                continue;
-            }
+            this.buffer.push("");
+            
+            if (cmd.trim() === "") continue;
 
             cmd = await this.replaceVars(cmd);
             const args = cmd.split(" ");
@@ -118,7 +117,6 @@ class Konsole {
 
             for (const command of this.options.commands) {
                 if (command.alias.includes(alias)) {
-                    this.buffer.push("");
                     const output = await command.run(alias, args);
                     if (output) {
                         this.buffer[this.buffer.length - 1] = output;
