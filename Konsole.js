@@ -139,7 +139,7 @@ class Konsole {
                 if (command.alias.includes(alias)) {
                     const output = await command.run(alias, args);
                     if (output) {
-                        this.buffer[this.buffer.length - 1] = output;
+                        this.buffer[this.buffer.length - 1] = await this.replaceVars(output);
                         this.buffer.push("")
                     }
                     found = true;
