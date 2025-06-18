@@ -93,7 +93,7 @@ class Konsole {
 
             if (event.key === "Enter") {
                 const inputText = currentLine.slice(this.options.prefix.length);
-                if(this.history[0] != inputText) {
+                if(this.history[0] != inputText && inputText.trim()) {
                     this.history.unshift(inputText);
                     if(this.history_index != 0) this.history_index++;
                 }
