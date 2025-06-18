@@ -10,12 +10,14 @@ class Konsole {
         commands: [
             {
                 "alias": ["echo", "print"],
+                "description": "prints out everything after the command",
                 "run": async(alias, args) => {
                     return Promise.resolve(args.join(" "));
                 }
             },
             {
                 "alias": ["clear", "cls"],
+                "description": "clears the screen",
                 "run": async() => {
                     return new Promise(resolve => {
                         this.buffer = [this.options.prefix]
@@ -25,6 +27,7 @@ class Konsole {
             },
             {
                 "alias": ["wait"],
+                "description": "delays for the amount of milliseconds supplied",
                 "run": async(alias, args) => {
                     return new Promise(resolve => {
                         setTimeout(resolve, args[0])
@@ -33,6 +36,7 @@ class Konsole {
             },
             {
                 "alias": ["help"],
+                "description": "displays all commands",
                 "run": async() => {
                     return new Promise(resolve => {
                         let output = "help for {version}\n  commands:\n"
