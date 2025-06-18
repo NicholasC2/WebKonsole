@@ -133,6 +133,7 @@ class Konsole {
         for (const [key, value] of Object.entries(this.options.variables)) {
             text = text.replaceAll(`{${key}}`, value);
         }
+        text = text.replaceAll("\\n", "\n");
         return text;
     }
 
