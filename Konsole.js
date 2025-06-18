@@ -49,7 +49,7 @@ class Konsole {
                     alias: ["help"],
                     description: "displays all commands",
                     run: async function () {
-                        let output = `help for {version}\n  commands:\n`;
+                        let output = `help for Konsole {version}\n  commands:\n`;
                         for (const cmd of this.options.commands) {
                             output += `   ${cmd.alias.join(" | ")} : "${cmd.description || ''}"\n`;
                         }
@@ -133,6 +133,7 @@ class Konsole {
         for (const [key, value] of Object.entries(this.options.variables)) {
             text = text.replaceAll(`{${key}}`, value);
         }
+        text = text.replaceAll("\\n", "\n");
         return text;
     }
 
