@@ -16,7 +16,7 @@ class Konsole {
             },
             {
                 "alias": ["clear", "cls"],
-                "run": async()=>{
+                "run": async() => {
                     return new Promise(resolve => {
                         this.buffer = [this.options.prefix]
                         resolve()
@@ -25,7 +25,7 @@ class Konsole {
             },
             {
                 "alias": ["wait"],
-                "run": async(alias, args)=>{
+                "run": async(alias, args) => {
                     return new Promise(resolve => {
                         setTimeout(resolve, args[0])
                     })
@@ -33,12 +33,13 @@ class Konsole {
             },
             {
                 "alias": ["help"],
-                "run": async()=>{
+                "run": async() => {
                     return new Promise(resolve => {
                         let output = "help for {version}\n  commands:"
                         this.commands.forEach(command => {
                             output += `   ${command.alias.join(" | ")}\n`
                         })
+                        resolve(output)
                     })
                 }
             }
