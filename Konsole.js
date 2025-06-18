@@ -10,14 +10,14 @@ class Konsole {
         commands: [
             {
                 "alias": ["echo", "print"],
-                "run": async(alias, args)=>{
+                "run": async(alias, args) => {
                     return Promise.resolve(args.join(" "));
                 }
             },
             {
                 "alias": ["clear", "cls"],
                 "run": async()=>{
-                    return new Promise((resolve)=>{
+                    return new Promise(resolve => {
                         this.buffer = [this.options.prefix]
                         resolve()
                     })
@@ -26,8 +26,19 @@ class Konsole {
             {
                 "alias": ["wait"],
                 "run": async(alias, args)=>{
-                    return new Promise((resolve)=>{
+                    return new Promise(resolve => {
                         setTimeout(resolve, args[0])
+                    })
+                }
+            },
+            {
+                "alias": ["help"],
+                "run": async()=>{
+                    return new Promise(resolve => {
+                        let output = "help for {version}\n  commands:"
+                        this.commands.forEach(command => {
+                            output += `   ${command.alias.join(" | ")}\n`
+                        })
                     })
                 }
             }
@@ -108,7 +119,7 @@ class Konsole {
         for (var cmd of text.split("\n")) {
             this.buffer.push("");
             
-            if (cmd.trim() === "") continue;
+            if (cmd.trim() == "") continue;
 
             cmd = await this.replaceVars(cmd);
             const args = cmd.split(" ");
