@@ -1,107 +1,113 @@
 class Konsole {
-    constructor(container, options = {
-        width: "100%",
-        height: "100%",
-        textColor: "lime",
-        backgroundColor: "black",
-        font: "monospace",
-        initCommand: "echo {version}",
-        prefix: "$ ",
-        commands: [
-            {
-                "alias": ["echo", "print"],
-                "description": "prints out everything after the command",
-                "run": async(alias, args) => {
-                    return Promise.resolve(args.join(" "));
-                }
-            },
-            {
-                "alias": ["clear", "cls"],
-                "description": "clears the screen",
-                "run": async() => {
-                    return new Promise(resolve => {
-                        this.buffer = [this.options.prefix]
-                        resolve()
-                    })
-                }
-            },
-            {
-                "alias": ["wait"],
-                "description": "delays for the amount of milliseconds supplied",
-                "run": async(alias, args) => {
-                    return new Promise(resolve => {
-                        setTimeout(resolve, args[0])
-                    })
-                }
-            },
-            {
-                "alias": ["help"],
-                "description": "displays all commands",
-                "run": async() => {
-                    return new Promise(resolve => {
-                        let output = "help for {version}\n  commands:\n"
-                        this.options.commands.forEach(command => {
-                            if(command.description) {
-                                output += `   ${command.alias.join(" | ")} : "${command.description}"\n`
-                            } else {
-                                output += `   ${command.alias.join(" | ")}\n`
-                            }
-                        })
-                        resolve(output)
-                    })
-                }
-            },
-            {
-                "alias": ["version", "ver"],
-                "description": "displays version information",
-                "run": async() => {
-                    return Promise.resolve("{version}")
-                }
-            }
-        ],
-        variables: {
-            "version": "Konsole v1.0.0"
+    constructor(container, options = {}) {
+        if (!(container instanceof HTMLElement)) {
+            throw new Error("Container must be an HTMLElement");
         }
-    }) {
-        if(!container instanceof HTMLElement) {
-            throw new Error("Container must be an Element")
-        }
-        this.container = container
-        this.options = options
-        this.buffer = []
-        setInterval(()=>{
-            this.update()
-        }, 16)
-        window.addEventListener("keydown", async(event) => {
-            event.preventDefault()
-            if(event.key == "Enter") {
-                if(event.ctrlKey) {
-                    this.buffer[this.buffer.length-1] += "\n"
-                } else {
-                    const current_buffer = this.buffer[this.buffer.length-1]
-                    const inputText = current_buffer.slice(this.options.prefix.length,current_buffer.length)
-                    await this.runCommand(inputText)
-                }
-            }
-            if(event.key == "Backspace") {
-                if(event.shiftKey) {
-                    this.buffer[this.buffer.length-1] = this.options.prefix
-                } else {
-                    const current_buffer = this.buffer[this.buffer.length-1]
-                    if(current_buffer.slice(0,current_buffer.length - 1).startsWith(this.options.prefix)) {
-                        this.buffer[this.buffer.length-1] = current_buffer.slice(0,current_buffer.length - 1)
+
+        this.container = container;
+        this.options = Object.assign({
+            width: "100%",
+            height: "100%",
+            textColor: "lime",
+            backgroundColor: "black",
+            font: "monospace",
+            initCommand: "echo {version_ascii}\n{version}\n",
+            prefix: "$ ",
+            variables: {
+                version: "v1.1.0-stable",
+                version_ascii: "\
+:::    ::: ::::::::  ::::    :::  ::::::::   ::::::::  :::        :::::::::: \n\
+:+:   :+: :+:    :+: :+:+:   :+: :+:    :+: :+:    :+: :+:        :+:        \n\
++:+  +:+  +:+    +:+ :+:+:+  +:+ +:+        +:+    +:+ +:+        +:+        \n\
++#++:++   +#+    +:+ +#+ +:+ +#+ +#++:++#++ +#+    +:+ +#+        +#++:++#   \n\
++#+  +#+  +#+    +#+ +#+  +#+#+#        +#+ +#+    +#+ +#+        +#+        \n\
+#+#   #+# #+#    #+# #+#   #+#+# #+#    #+# #+#    #+# #+#        #+#        \n\
+###    ### ########  ###    ####  ########   ########  ########## ########## ",
+                ascii_gen: "https://patorjk.com/software/taag/#p=display&f=Alligator2&t=Konsole"
+            },
+            commands: [
+                {
+                    alias: ["echo", "print"],
+                    description: "prints out everything after the command",
+                    run: async (alias, args) => args.join(" ")
+                },
+                {
+                    alias: ["clear", "cls"],
+                    description: "clears the screen",
+                    run: async function () {
+                        this.buffer = [this.options.prefix];
                     }
+                },
+                {
+                    alias: ["wait"],
+                    description: "delays for the amount of milliseconds supplied",
+                    run: async (alias, args) => {
+                        await new Promise(resolve => setTimeout(resolve, Number(args[0])));
+                    }
+                },
+                {
+                    alias: ["help"],
+                    description: "displays all commands",
+                    run: async function () {
+                        let output = `help for {version}\n  commands:\n`;
+                        for (const cmd of this.options.commands) {
+                            output += `   ${cmd.alias.join(" | ")} : "${cmd.description || ''}"\n`;
+                        }
+                        return output;
+                    }
+                },
+                {
+                    alias: ["version", "ver"],
+                    description: "displays version information",
+                    run: async () => "{version}"
                 }
+            ]
+        }, options);
+
+        this.buffer = [];
+        this.cursorVisible = true;
+        this.blinkTime = 0;
+
+        setInterval(() => {
+            if (this.blinkTime >= 500) {
+                this.cursorVisible = !this.cursorVisible;
+                this.update();
+                this.blinkTime = 0;
             }
-            if(event.key == "l" && event.ctrlKey && !event.altKey && !event.shiftKey) {
-                this.buffer = [this.options.prefix]
+            this.blinkTime+=100
+        }, 100);
+
+        window.addEventListener("keydown", async (event) => {
+            event.preventDefault();
+            this.blinkTime = 0
+            this.cursorVisible = true;
+
+            if (this.buffer.length === 0) {
+                this.buffer.push(this.options.prefix);
             }
-            if(event.key.length == 1 && !event.ctrlKey && !event.altKey) {
-                this.buffer[this.buffer.length-1] += event.key
+
+            const currentIndex = this.buffer.length - 1;
+            const currentLine = this.buffer[currentIndex];
+
+            if (event.key === "Enter") {
+                const inputText = currentLine.slice(this.options.prefix.length);
+                await this.runCommand(inputText);
+            } else if (event.key === "Backspace") {
+                if (event.shiftKey) {
+                    this.buffer[currentIndex] = this.options.prefix;
+                } else if (currentLine.length > this.options.prefix.length) {
+                    this.buffer[currentIndex] = currentLine.slice(0, -1);
+                }
+            } else if (event.ctrlKey && event.key === "l") {
+                this.buffer = [this.options.prefix];
+            } else if (event.key.length === 1 && !event.ctrlKey && !event.altKey) {
+                this.buffer[currentIndex] += event.key;
             }
-            this.update()
-        })
-        this.runCommand(options.initCommand)
+
+            this.update();
+        });
+
+        this.runCommand(this.options.initCommand);
     }
 
     update() {
@@ -114,53 +120,52 @@ class Konsole {
             overflowY: "auto",
             whiteSpace: "pre-wrap",
             padding: "5px",
-            boxSizing: "border-box",
-            cursor: "text"
-        })
-        this.container.innerText = this.buffer.join("\n")+"|"
+            boxSizing: "border-box"
+        });
+
+        const output = this.buffer.join("\n");
+        const cursor = this.cursorVisible ? "|" : " ";
+        this.container.innerText = output + cursor;
+        this.container.scrollTop = this.container.scrollHeight;
     }
 
     async replaceVars(text = "") {
-        return new Promise(async(resolve)=>{
-            const variables = Object.entries(this.options.variables);
-            variables.forEach((variable) => {
-                const [key, value] = variable
-                text = text.replaceAll(`{${key}}`, value)
-            })
-            resolve(text)
-        })
+        for (const [key, value] of Object.entries(this.options.variables)) {
+            text = text.replaceAll(`{${key}}`, value);
+        }
+        return text;
     }
 
     async runCommand(text) {
-        for (var cmd of text.split("\n")) {
-            this.buffer.push("");
-            
-            if (cmd.trim() == "") continue;
+        this.buffer.push("");
 
-            cmd = await this.replaceVars(cmd);
-            const args = cmd.split(" ");
+        for (const line of text.split(";")) {
+            if (!line.trim()) continue;
+
+            const replaced = await this.replaceVars(line);
+            const args = replaced.split(" ");
             const alias = args.shift();
-            let found = false;
 
-            for (const command of this.options.commands) {
-                if (command.alias.includes(alias)) {
-                    const output = await command.run(alias, args);
-                    if (output) {
-                        this.buffer[this.buffer.length - 1] = await this.replaceVars(output);
-                        this.buffer.push("")
+            let matched = false;
+            for (const cmd of this.options.commands) {
+                if (cmd.alias.includes(alias)) {
+                    const result = await cmd.run.call(this, alias, args);
+                    if (result) {
+                        this.buffer[this.buffer.length - 1] = await this.replaceVars(result);
+                        this.buffer.push("");
                     }
-                    found = true;
+                    matched = true;
                     break;
                 }
             }
 
-            if (!found) {
+            if (!matched) {
                 this.buffer[this.buffer.length - 1] = `Unknown command: ${alias}`;
-                this.buffer.push("")
+                this.buffer.push("");
             }
         }
 
         this.buffer[this.buffer.length - 1] = this.options.prefix;
-        return;
+        this.update();
     }
 }
