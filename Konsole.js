@@ -10,7 +10,7 @@ class Konsole {
             initCommand: "echo {version_ascii}\n{version}\n",
             prefix: "$ ",
             variables: {
-                version: "v1.2.0-stable (colours)",
+                version: "v1.1.1-stable",
                 version_ascii: "\
 :::    ::: ::::::::  ::::    :::  ::::::::   ::::::::  :::        :::::::::: \n\
 :+:   :+: :+:    :+: :+:+:   :+: :+:    :+: :+:    :+: :+:        :+:        \n\
@@ -128,6 +128,7 @@ class Konsole {
             }
 
             this.update();
+            this.container.scrollTop = this.container.scrollHeight;
         });
 
         this.runCommand(this.options.initCommand);
@@ -148,8 +149,7 @@ class Konsole {
 
         const output = this.buffer.join("\n");
         const cursor = this.cursorVisible ? "|" : " ";
-        this.container.innerHTML = this.renderColoredText(output) + cursor;
-        this.container.scrollTop = this.container.scrollHeight;
+        this.container.innerHTML = output + cursor;
     }
 
     async replaceVars(text = "") {
@@ -164,12 +164,6 @@ class Konsole {
         text = text.replaceAll("\\n", "\n");
         return text;
     }
-
-    renderColoredText(text) {
-        return text.replace(/\[color=(.+?)\](.*?)\[\/color\]/gs, (match, color, content) => {
-            return `<span style="color:${color}">${content}</span>`;
-        });
-    };
 
     async runCommand(text) {
         this.buffer.push("");
@@ -197,7 +191,7 @@ class Konsole {
             }
 
             if (!matched) {
-                this.buffer[this.buffer.length - 1] = `Unknown command: ${alias}`;
+                this.buffer[this.buffer.length - 1] = `[color=red]Unknown command: ${alias}[/color]`;
                 this.buffer.push("");
             }
         }
