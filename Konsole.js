@@ -1,9 +1,5 @@
 class Konsole {
     constructor(container, options = {}) {
-        if (!(container instanceof HTMLElement)) {
-            throw new Error("Container must be an HTMLElement");
-        }
-
         this.container = container;
         this.options = Object.assign({
             width: "100%",
@@ -60,6 +56,11 @@ class Konsole {
                     alias: ["version", "ver"],
                     description: "displays version information",
                     run: async () => "{version}"
+                },
+                {
+                    alias: ["warn"],
+                    description: "prints a warning message in yellow",
+                    run: async (alias, args) => `[color=yellow]Warning:[/color] ${args.join(" ")}`
                 }
             ]
         }, options);
@@ -147,7 +148,7 @@ class Konsole {
 
         const output = this.buffer.join("\n");
         const cursor = this.cursorVisible ? "|" : " ";
-        this.container.innerText = output + cursor;
+        this.container.innerHTML = this.renderColoredText(output) + cursor;
         this.container.scrollTop = this.container.scrollHeight;
     }
 
@@ -163,6 +164,12 @@ class Konsole {
         text = text.replaceAll("\\n", "\n");
         return text;
     }
+
+    renderColoredText(text) {
+        return text.replace(/\[color=(.+?)\](.*?)\[\/color\]/gs, (match, color, content) => {
+            return `<span style="color:${color}">${content}</span>`;
+        });
+    };
 
     async runCommand(text) {
         this.buffer.push("");
