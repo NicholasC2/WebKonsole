@@ -122,6 +122,8 @@ class Konsole {
                     return;
                 };
                 this.buffer[currentIndex] = this.options.prefix + this.history[this.history_index - 1]
+            } else if(event.key == "v" && event.ctrlKey) {
+                this.buffer[currentIndex] += await navigator.clipboard.readText()
             }
 
             this.update();
@@ -150,9 +152,14 @@ class Konsole {
     }
 
     async replaceVars(text = "") {
-        for (const [key, value] of Object.entries(this.options.variables)) {
-            text = text.replaceAll(`{${key}}`, value);
-        }
+        let prev;
+        do {
+            prev = text;
+            for (const [key, value] of Object.entries(this.options.variables)) {
+                text = text.replaceAll(`{${key}}`, value);
+            }
+        } while (text !== prev);
+
         text = text.replaceAll("\\n", "\n");
         return text;
     }
@@ -160,8 +167,10 @@ class Konsole {
     async runCommand(text) {
         this.buffer.push("");
 
-        for (const line of text.split(";")) {
+        for (var line of text.split(";")) {
             if (!line.trim()) continue;
+
+            line = line.trim()
 
             const replaced = await this.replaceVars(line);
             const args = replaced.split(" ");
