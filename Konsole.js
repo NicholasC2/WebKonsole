@@ -99,21 +99,25 @@ class Konsole {
                     if(this.history_index != 0) this.history_index++;
                 }
                 await this.runCommand(inputText);
+                this.container.scrollTop = this.container.scrollHeight;
             } else if (event.key === "Backspace") {
                 if (event.shiftKey) {
                     this.buffer[currentIndex] = this.options.prefix;
                 } else if (currentLine.length > this.options.prefix.length) {
                     this.buffer[currentIndex] = currentLine.slice(0, -1);
                 }
+                this.container.scrollTop = this.container.scrollHeight;
             } else if (event.ctrlKey && event.key === "l") {
                 this.buffer = [this.options.prefix];
             } else if (event.key.length === 1 && !event.ctrlKey && !event.altKey) {
                 this.buffer[currentIndex] += event.key;
+                this.container.scrollTop = this.container.scrollHeight;
             } else if(event.key == "ArrowUp") {
                 if(this.history.includes(this.buffer[currentIndex].slice(this.options.prefix.length, this.buffer[currentIndex].length)) || this.history_index == 0) this.history_index++;
                 if(this.history_index > this.history.length) this.history_index = this.history.length;
                 if(this.history_index == 0) return;
                 this.buffer[currentIndex] = this.options.prefix + this.history[this.history_index - 1]
+                this.container.scrollTop = this.container.scrollHeight;
             } else if(event.key == "ArrowDown") {
                 if(this.history.includes(this.buffer[currentIndex].slice(this.options.prefix.length, this.buffer[currentIndex].length)) || this.history_index == 0) this.history_index-=1;
                 if(this.history_index < 0) this.history_index = 0;
@@ -123,12 +127,13 @@ class Konsole {
                     return;
                 };
                 this.buffer[currentIndex] = this.options.prefix + this.history[this.history_index - 1]
+                this.container.scrollTop = this.container.scrollHeight;
             } else if(event.key == "v" && event.ctrlKey) {
                 this.buffer[currentIndex] += await navigator.clipboard.readText()
+                this.container.scrollTop = this.container.scrollHeight;
             }
 
             this.update();
-            this.container.scrollTop = this.container.scrollHeight;
         });
 
         this.runCommand(this.options.initCommand);
