@@ -56,11 +56,6 @@ class Konsole {
                     alias: ["version", "ver"],
                     description: "displays version information",
                     run: async () => "{version}"
-                },
-                {
-                    alias: ["warn"],
-                    description: "prints a warning message in yellow",
-                    run: async (alias, args) => `[color=yellow]Warning:[/color] ${args.join(" ")}`
                 }
             ]
         }, options);
