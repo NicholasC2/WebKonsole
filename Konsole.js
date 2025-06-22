@@ -10,7 +10,7 @@ class Konsole {
             initCommand: "echo {version_ascii}\n{version}\n",
             prefix: "$ ",
             variables: {
-                version: "v1.1.0-stable",
+                version: "v1.2.0-stable (colours)",
                 version_ascii: "\
 :::    ::: ::::::::  ::::    :::  ::::::::   ::::::::  :::        :::::::::: \n\
 :+:   :+: :+:    :+: :+:+:   :+: :+:    :+: :+:    :+: :+:        :+:        \n\
