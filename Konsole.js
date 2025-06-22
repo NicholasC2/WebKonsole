@@ -55,7 +55,7 @@ class Konsole {
                 {
                     alias: ["version", "ver"],
                     description: "displays version information",
-                    run: async () => "{version}"
+                    run: async () => "Konsole Version: {version}"
                 }
             ]
         }, options);
