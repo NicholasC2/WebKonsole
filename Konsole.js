@@ -7,10 +7,10 @@ class Konsole {
             textColor: "lime",
             backgroundColor: "black",
             font: "monospace",
-            initCommand: "echo {version_ascii}\n{version}\n",
+            initCommand: "echo {version_ascii};nl;ver;nl",
             prefix: "$ ",
             variables: {
-                version: "v1.1.1-stable",
+                version: "1.1.2",
                 version_ascii: "\
 :::    ::: ::::::::  ::::    :::  ::::::::   ::::::::  :::        :::::::::: \n\
 :+:   :+: :+:    :+: :+:+:   :+: :+:    :+: :+:    :+: :+:        :+:        \n\
@@ -19,7 +19,8 @@ class Konsole {
 +#+  +#+  +#+    +#+ +#+  +#+#+#        +#+ +#+    +#+ +#+        +#+        \n\
 #+#   #+# #+#    #+# #+#   #+#+# #+#    #+# #+#    #+# #+#        #+#        \n\
 ###    ### ########  ###    ####  ########   ########  ########## ########## ",
-                ascii_gen: "https://patorjk.com/software/taag/#p=display&f=Alligator2&t=Konsole"
+                ascii_gen: "https://patorjk.com/software/taag/#p=display&f=Alligator2&t=Konsole",
+                branch: "stable"
             },
             commands: [
                 {
@@ -55,7 +56,12 @@ class Konsole {
                 {
                     alias: ["version", "ver"],
                     description: "displays version information",
-                    run: async () => "{version}"
+                    run: async () => "Konsole Version: {version}\nKonsole Branch: {branch}\nDeveloper/s: NicholasC"
+                },
+                {
+                    alias: ["nl", "new-line"],
+                    description: "prints a new line",
+                    run: async () => "\n"
                 }
             ]
         }, options);
@@ -149,7 +155,7 @@ class Konsole {
 
         const output = this.buffer.join("\n");
         const cursor = this.cursorVisible ? "|" : " ";
-        this.container.innerHTML = output + cursor;
+        this.container.innerText = output + cursor;
     }
 
     async replaceVars(text = "") {
@@ -191,7 +197,7 @@ class Konsole {
             }
 
             if (!matched) {
-                this.buffer[this.buffer.length - 1] = `[color=red]Unknown command: ${alias}[/color]`;
+                this.buffer[this.buffer.length - 1] = `Unknown command: ${alias}`;
                 this.buffer.push("");
             }
         }
