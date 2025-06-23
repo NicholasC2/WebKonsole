@@ -7,7 +7,7 @@ class Konsole {
             textColor: "lime",
             backgroundColor: "black",
             font: "monospace",
-            initCommand: "echo {version_ascii};nl;ver;nl",
+            initCommand: "echo {version_ascii}\nv{version}-{branch}",
             prefix: "$ ",
             variables: {
                 version: "1.1.2",
