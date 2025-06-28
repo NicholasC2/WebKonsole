@@ -10,14 +10,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 import Command from "./Command.js";
 export default class HTTP extends Command {
     constructor() {
-        super(["fetch"], "Sends an HTTP GET request to the specified URL", function (alias, args) {
+        super(["fetch"], "Sends an HTTP GET request to the specified URL", function (_alias, args) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (!args || args.length === 0) {
                     return "Usage: fetch <url>";
                 }
                 const url = args[0];
                 try {
-                    const response = yield fetch("https://corsproxy.io/?url=" + encodeURIComponent(url));
+                    const response = yield fetch("https://corsproxy.io/?url=" + encodeURIComponent(url || "https://example.com"));
                     if (!response.ok) {
                         return `Error: ${response.status} ${response.statusText}`;
                     }
@@ -31,3 +31,4 @@ export default class HTTP extends Command {
         });
     }
 }
+//# sourceMappingURL=HTTP.js.map

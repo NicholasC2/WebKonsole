@@ -14,7 +14,7 @@ interface Options {
 let baseCommands: Command[] = [];
 
 baseCommands.push(
-    new Command(["echo", "print"], "prints out everything after the command", async function (alias, args) {
+    new Command(["echo", "print"], "prints out everything after the command", async function (_alias, args) {
         if (!args) {
             return "";
         }
@@ -41,11 +41,11 @@ baseCommands.push(
 
 baseCommands.push(
     new Command(["wait"],
-        "delays for the amount of milliseconds supplied", async (alias, args) => {
+        "delays for the amount of milliseconds supplied", async (_alias, args) => {
             if (!args) {
-                return "";
+                return await new Promise(resolve => setTimeout(resolve, 1));
             }
-            await new Promise(resolve => setTimeout(resolve, Number(args[0])));
+            return await new Promise(resolve => setTimeout(resolve, Number(args[0])));
         }
     )
 )
@@ -64,7 +64,7 @@ Developers: NicholacsC, BoxyPlayz`
 export default class Konsole {
     public container: HTMLElement;
     public options: Options;
-    public buffer: string[];
+    public buffer: string[] = [];
     public cursorVisible: boolean;
     public blinkTime: number;
     public history: string[];
@@ -82,15 +82,12 @@ export default class Konsole {
             initCommand: "echo {version_ascii}\nv{version}-{branch}",
             prefix: "$ ",
             variables: {
-                version: "1.1.2",
+                version: "1.2.0",
                 version_ascii: "\
-:::    ::: ::::::::  ::::    :::  ::::::::   ::::::::  :::        :::::::::: \n\
-:+:   :+: :+:    :+: :+:+:   :+: :+:    :+: :+:    :+: :+:        :+:        \n\
-+:+  +:+  +:+    +:+ :+:+:+  +:+ +:+        +:+    +:+ +:+        +:+        \n\
-+#++:++   +#+    +:+ +#+ +:+ +#+ +#++:++#++ +#+    +:+ +#+        +#++:++#   \n\
-+#+  +#+  +#+    +#+ +#+  +#+#+#        +#+ +#+    +#+ +#+        +#+        \n\
-#+#   #+# #+#    #+# #+#   #+#+# #+#    #+# #+#    #+# #+#        #+#        \n\
-###    ### ########  ###    ####  ########   ########  ########## ########## ",
+ __  __  ____  __  _   ____  ____  _     ____  \n\
+|  |/  // () \|  \| | (_ (_`/ () \| |__ | ===| \n\
+|__|\__\\____/|_|\__|.__)__)\____/|____||____| \n\
+                ",
                 ascii_gen: "https://patorjk.com/software/taag/#p=display&f=Alligator2&t=Konsole",
                 branch: "stable"
             },
@@ -124,7 +121,7 @@ export default class Konsole {
             }
 
             const currentIndex = this.buffer.length - 1;
-            const currentLine = this.buffer[currentIndex];
+            const currentLine = this.buffer[currentIndex] || "";
 
             if (event.key === "Enter") {
                 const inputText = currentLine.slice(this.options.prefix.length);
@@ -147,13 +144,13 @@ export default class Konsole {
                 this.buffer[currentIndex] += event.key;
                 this.container.scrollTop = this.container.scrollHeight;
             } else if (event.key == "ArrowUp") {
-                if (this.history.includes(this.buffer[currentIndex].slice(this.options.prefix.length, this.buffer[currentIndex].length)) || this.history_index == 0) this.history_index++;
+                if (this.history.includes((this.buffer[currentIndex] || "").slice(this.options.prefix.length, (this.buffer[currentIndex] || "").length)) || this.history_index == 0) this.history_index++;
                 if (this.history_index > this.history.length) this.history_index = this.history.length;
                 if (this.history_index == 0) return;
                 this.buffer[currentIndex] = this.options.prefix + this.history[this.history_index - 1]
                 this.container.scrollTop = this.container.scrollHeight;
             } else if (event.key == "ArrowDown") {
-                if (this.history.includes(this.buffer[currentIndex].slice(this.options.prefix.length, this.buffer[currentIndex].length)) || this.history_index == 0) this.history_index -= 1;
+                if (this.history.includes((this.buffer[currentIndex] || "").slice(this.options.prefix.length, (this.buffer[currentIndex] || "").length)) || this.history_index == 0) this.history_index -= 1;
                 if (this.history_index < 0) this.history_index = 0;
                 if (this.history_index == 0) {
                     this.buffer[currentIndex] = this.options.prefix
@@ -179,11 +176,7 @@ export default class Konsole {
             color: this.options.textColor,
             fontFamily: this.options.font,
             width: this.options.width,
-            height: this.options.height,
-            overflowY: "auto",
-            whiteSpace: "pre-wrap",
-            padding: "5px",
-            boxSizing: "border-box",
+            height: this.options.height
         });
 
         const output = this.buffer.join("\n");

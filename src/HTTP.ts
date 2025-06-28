@@ -6,13 +6,13 @@ export default class HTTP extends Command {
         super(
             ["fetch"],
             "Sends an HTTP GET request to the specified URL",
-            async function (alias, args) {
+            async function (_alias, args) {
                 if (!args || args.length === 0) {
                     return "Usage: fetch <url>";
                 }
                 const url = args[0];
                 try {
-                    const response = await fetch("https://corsproxy.io/?url=" + encodeURIComponent(url));
+                    const response = await fetch("https://corsproxy.io/?url=" + encodeURIComponent(url || "https://example.com"));
                     if (!response.ok) {
                         return `Error: ${response.status} ${response.statusText}`;
                     }
