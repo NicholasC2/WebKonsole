@@ -1,4 +1,5 @@
 import Command from "./Command.js";
+import baseCommands from "./BaseCommands.js";
 
 interface Options {
     width?: string;
@@ -11,55 +12,17 @@ interface Options {
     variables: { [key: string]: string };
 }
 
-let baseCommands: Command[] = [];
+let ascii = `Loading ASCII art...`;
+try {
+    const response = await fetch("ASCII.txt");
+    if (!response.ok) {
+        ascii = `Error: ${response.status} ${response.statusText}`;
+    }
+    ascii = await response.text();
+} catch (error: any) {
+    ascii = `Error fetching ASCII art: ${error.message}`;
+}
 
-baseCommands.push(
-    new Command(["echo", "print"], "prints out everything after the command", async function (_alias, args) {
-        if (!args) {
-            return "";
-        }
-        return args!.join(" ");
-    })
-);
-
-baseCommands.push(
-    new Command(["clear", "cls"],
-        "clears the screen", async function () {
-            this.buffer = [this.options.prefix!];
-        })
-);
-
-baseCommands.push(
-    new Command(["help"], "displays all commands", async function () {
-        let output = `help for Konsole {version}\n  commands:\n`;
-        for (const cmd of this.commands) {
-            output += `   ${cmd.alias.join(" or ")} : ${cmd.description || ''}\n`;
-        }
-        return output;
-    })
-);
-
-baseCommands.push(
-    new Command(["wait"],
-        "delays for the amount of milliseconds supplied", async (_alias, args) => {
-            if (!args) {
-                return await new Promise(resolve => setTimeout(resolve, 1));
-            }
-            return await new Promise(resolve => setTimeout(resolve, Number(args[0])));
-        }
-    )
-)
-
-baseCommands.push(
-    new Command(
-        ["version", "ver"],
-        "displays version information", async function () {
-            return `Konsole Version: {version}
-Konsole Branch: {branch}
-Developers: NicholacsC, BoxyPlayz`
-        }
-    )
-)
 
 export default class Konsole {
     public container: HTMLElement;
@@ -70,8 +33,10 @@ export default class Konsole {
     public history: string[];
     public history_index: number;
     public commands: Command[];
+    public version: string = "1.2.0";
+    public branch: string = "stable";
 
-    constructor(Container: HTMLElement, options = {}) {
+    constructor(Container: HTMLElement, options = {prefix: "$ "}) {
         this.container = Container as HTMLElement;
         this.options = Object.assign({
             width: "100%",
@@ -80,19 +45,17 @@ export default class Konsole {
             backgroundColor: "black",
             font: "monospace",
             initCommand: "echo {version_ascii}\nv{version}-{branch}",
-            prefix: "$ ",
+            prefix: options.prefix || "$ ",
             variables: {
                 version: "1.2.0",
-                version_ascii: "\
- __  __  ____  __  _   ____  ____  _     ____  \n\
-|  |/  // () \|  \| | (_ (_`/ () \| |__ | ===| \n\
-|__|\__\\____/|_|\__|.__)__)\____/|____||____| \n\
-                ",
+                version_ascii: ascii,
                 ascii_gen: "https://patorjk.com/software/taag/#p=display&f=Alligator2&t=Konsole",
                 branch: "stable"
             },
 
-        }, options);
+        }, options
+    );
+        console.log(ascii);
 
         this.buffer = [];
         this.cursorVisible = true;
@@ -176,7 +139,8 @@ export default class Konsole {
             color: this.options.textColor,
             fontFamily: this.options.font,
             width: this.options.width,
-            height: this.options.height
+            height: this.options.height,
+            whiteSpace: "pre-wrap",
         });
 
         const output = this.buffer.join("\n");
