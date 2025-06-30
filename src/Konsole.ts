@@ -35,6 +35,7 @@ export default class Konsole {
     public commands: Command[];
     public version: string = "1.2.0";
     public branch: string = "stable";
+    public works = true;
 
     constructor(Container: HTMLElement, options = {prefix: "$ "}) {
         this.container = Container as HTMLElement;
@@ -78,6 +79,10 @@ export default class Konsole {
             event.preventDefault();
             this.blinkTime = 0
             this.cursorVisible = true;
+
+            if (this.works === false) {
+                return;
+            }
 
             if (this.buffer.length === 0) {
                 this.buffer.push(this.options.prefix || "");
