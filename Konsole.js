@@ -1,3 +1,11 @@
+class Command {
+    constructor(alias = [], description = "", run = async () => "Need to add Run function") {
+        this.alias = alias
+        this.description = description.toString()
+        this.run = run
+    }
+}
+
 class Konsole {
     constructor(container, options = {}) {
         this.container = container;
@@ -23,46 +31,22 @@ class Konsole {
                 branch: "stable"
             },
             commands: [
-                {
-                    alias: ["echo", "print"],
-                    description: "prints out everything after the command",
-                    run: async (alias, args) => args.join(" ")
-                },
-                {
-                    alias: ["clear", "cls"],
-                    description: "clears the screen",
-                    run: async function () {
-                        this.buffer = [this.options.prefix];
+                new Command(["echo", "print"], "prints out everything after the command", async (alias, args) => args.join(" ")),
+                new Command(["clear", "cls"], "clears the screen", async (alias, args) => {
+                    this.buffer = [this.options.prefix];
+                }),
+                new Command(["wait", "delay"], "delays for the amount of milliseconds supplied", async (alias, args) => {
+                    await new Promise(resolve => setTimeout(resolve, Number(args[0])));
+                }),
+                new Command(["help"], "displays all commands", async function () {
+                    let output = `help for Konsole {version}\n  commands:\n`;
+                    for (const cmd of this.options.commands) {
+                        output += `   ${cmd.alias.join(" | ")} : "${cmd.description || ''}"\n`;
                     }
-                },
-                {
-                    alias: ["wait"],
-                    description: "delays for the amount of milliseconds supplied",
-                    run: async (alias, args) => {
-                        await new Promise(resolve => setTimeout(resolve, Number(args[0])));
-                    }
-                },
-                {
-                    alias: ["help"],
-                    description: "displays all commands",
-                    run: async function () {
-                        let output = `help for Konsole {version}\n  commands:\n`;
-                        for (const cmd of this.options.commands) {
-                            output += `   ${cmd.alias.join(" | ")} : "${cmd.description || ''}"\n`;
-                        }
-                        return output;
-                    }
-                },
-                {
-                    alias: ["version", "ver"],
-                    description: "displays version information",
-                    run: async () => "Konsole Version: {version}\nKonsole Branch: {branch}\nDeveloper/s: NicholasC"
-                },
-                {
-                    alias: ["nl", "new-line"],
-                    description: "prints a new line",
-                    run: async () => "\n"
-                }
+                    return output;
+                }),
+                new Command(["version", "ver"], "displays version information", async () => "Konsole Version: {version}\nKonsole Branch: {branch}\nDeveloper/s: NicholasC"),
+                new Command(["nl", "new-line"], "prints a new line", async () => "\n")
             ]
         }, options);
 
