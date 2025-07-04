@@ -4,11 +4,14 @@
         <title>WebKonsole</title>
     </head>
     <body style="background: black; height: calc(100vh - 16px);">
-        <div class="konsole"></div>
+        <div class="konsole" style="cursor: text;border: 3px lime solid;"></div>
         <script src="Konsole.js"></script>
         <script>
             const container = document.querySelector(".konsole")
-            const konsole = new Konsole(container)
+            const konsole = new Konsole(container, {
+                width: "50%",
+                height: "50%"
+            })
         </script>
     </body>
 </html>

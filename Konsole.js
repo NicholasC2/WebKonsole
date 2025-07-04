@@ -14,6 +14,7 @@ class Konsole {
         this.blinkTime = 0;
         this.history = [];
         this.historyIndex = 0;
+        this.showFocus = false;
 
         // Merge default options
         this.options = Object.assign({
@@ -88,7 +89,9 @@ class Konsole {
     }
 
     setupInputHandler() {
-        window.addEventListener("keydown", async (e) => {
+        this.container.setAttribute("tabindex", "0");
+        
+        this.container.addEventListener("keydown", async (e) => {
             e.preventDefault();
             this.resetCursorBlink();
 
@@ -121,6 +124,17 @@ class Konsole {
             this.scrollToBottom();
             this.update();
         });
+
+        this.container.addEventListener("focus", () => {
+            this.resetCursorBlink();
+            this.showFocus = true;
+            this.update();
+        })
+
+        this.container.addEventListener("blur", () => {
+            this.showFocus = false;
+            this.update();
+        })
     }
 
     resetCursorBlink() {
@@ -161,7 +175,7 @@ class Konsole {
         });
 
         const output = this.buffer.join("\n");
-        const cursor = this.cursorVisible ? "|" : " ";
+        const cursor = (this.showFocus && this.cursorVisible) ? "|" : " ";
         this.container.innerText = output + cursor;
     }
 
