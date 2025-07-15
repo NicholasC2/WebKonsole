@@ -31,7 +31,7 @@ class Konsole {
             initCommand: "echo {version_ascii}\nv{version}-{branch}",
             prefix: "$ ",
             variables: {
-                version: "1.1.2",
+                version: "1.1.3",
                 version_ascii:
 `:::    ::: ::::::::  ::::    :::  ::::::::   ::::::::  :::        :::::::::: 
 :+:   :+: :+:    :+: :+:+:   :+: :+:    :+: :+:    :+: :+:        :+:        
