@@ -4,15 +4,11 @@
         <title>WebKonsole</title>
     </head>
     <body style="background: black; height: calc(100vh - 16px);">
-        <div class="konsole" style="cursor: text;border: 3px lime solid;"></div>
+        <div class="konsole" style="border: 3px lime solid;"></div>
         <script src="Konsole.js"></script>
         <script>
             const container = document.querySelector(".konsole")
-            const konsole = new Konsole(container, {
-                width: "50%",
-                height: "50%"
-            })
+            const konsole = new Konsole(container)
         </script>
-        <a href="https://boxyplayz.github.io/WebKonsole/" style="color: red; font-family: sans-serif;">Warning this Version is Outdated Click this for the Latest Version</a>
     </body>
 </html>

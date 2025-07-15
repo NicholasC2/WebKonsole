@@ -7,7 +7,7 @@ class Command {
 }
 
 class Konsole {
-    constructor(container, options = {}) {
+    constructor(container, options = {}, style = {}) {
         this.container = container;
         this.buffer = [];
         this.cursorVisible = true;
@@ -15,14 +15,19 @@ class Konsole {
         this.history = [];
         this.historyIndex = 0;
         this.showFocus = false;
+        
+        // Merge default style
+        this.style = Object.assign({
+            "width": "100%",
+            "height": "100%",
+            "color": "lime",
+            "backgroundColor": "black",
+            "font-family": "monospace",
+            "cursor": "text"
+        }, style)
 
         // Merge default options
         this.options = Object.assign({
-            width: "100%",
-            height: "100%",
-            textColor: "lime",
-            backgroundColor: "black",
-            font: "monospace",
             initCommand: "echo {version_ascii}\nv{version}-{branch}",
             prefix: "$ ",
             variables: {
@@ -41,6 +46,9 @@ class Konsole {
             commands: []
         }, options);
 
+        // Adds CSS Styles
+        this.applyStyle();
+
         // Add default commands
         this.registerDefaultCommands();
 
@@ -52,6 +60,17 @@ class Konsole {
 
         // Run initial command
         this.runCommand(this.options.initCommand);
+    }
+
+    applyStyle() {
+        Object.assign(this.container.style, {
+            overflowY: "auto",
+            overflowX: "auto",
+            whiteSpace: "pre",
+            padding: "5px",
+            boxSizing: "border-box",
+            ...this.style
+        });
     }
 
     registerDefaultCommands() {
@@ -92,6 +111,8 @@ class Konsole {
         this.container.setAttribute("tabindex", "0");
         
         this.container.addEventListener("keydown", async (e) => {
+            if(this.command_running) return;
+
             e.preventDefault();
             this.resetCursorBlink();
 
@@ -162,20 +183,8 @@ class Konsole {
     }
 
     update() {
-        Object.assign(this.container.style, {
-            backgroundColor: this.options.backgroundColor,
-            color: this.options.textColor,
-            fontFamily: this.options.font,
-            width: this.options.width,
-            height: this.options.height,
-            overflowY: "auto",
-            whiteSpace: "pre-wrap",
-            padding: "5px",
-            boxSizing: "border-box",
-        });
-
         const output = this.buffer.join("\n");
-        const cursor = (this.showFocus && this.cursorVisible) ? "|" : " ";
+        const cursor = (this.showFocus && this.cursorVisible && !this.command_running) ? "|" : " ";
         this.container.innerText = output + cursor;
     }
 
@@ -192,6 +201,7 @@ class Konsole {
     }
 
     async runCommand(inputText) {
+        this.command_running = true;
         this.buffer.push("");
 
         for (const line of inputText.split(";").map(l => l.trim()).filter(Boolean)) {
@@ -214,5 +224,6 @@ class Konsole {
 
         this.buffer[this.buffer.length - 1] = this.options.prefix;
         this.update();
+        this.command_running = false;
     }
 }
