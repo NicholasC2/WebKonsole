@@ -92,7 +92,11 @@ class Konsole {
             new Command(["version", "ver"], "Shows version info", async () => 
                 "Konsole Version: {version}\nKonsole Branch: {branch}\nDeveloper/s: NicholasC"
             ),
-            new Command(["nl", "new-line"], "Prints a new line", async () => "\n")
+            new Command(["nl", "new-line"], "Prints a new line", async () => "\n"),
+            new Command(["reset"], "Resets the Konsole Instance", async () => {
+                this.buffer = []
+                this.runCommand(this.options.initCommand);
+            })
         );
     }
 
