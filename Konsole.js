@@ -6,6 +6,8 @@ class Command {
     }
 }
 
+const intervals = []
+
 class Konsole {
     constructor(container, options = {}, style = {}) {
         this.container = container;
@@ -32,8 +34,8 @@ class Konsole {
             prefix: "$ ",
             variables: {
                 version: "1.1.3",
-                version_ascii:
-`:::    ::: ::::::::  ::::    :::  ::::::::   ::::::::  :::        :::::::::: 
+                version_ascii:`\
+:::    ::: ::::::::  ::::    :::  ::::::::   ::::::::  :::        :::::::::: 
 :+:   :+: :+:    :+: :+:+:   :+: :+:    :+: :+:    :+: :+:        :+:        
 +:+  +:+  +:+    +:+ :+:+:+  +:+ +:+        +:+    +:+ +:+        +:+        
 +#++:++   +#+    +:+ +#+ +:+ +#+ +#++:++#++ +#+    +:+ +#+        +#++:++#   
@@ -92,23 +94,24 @@ class Konsole {
             new Command(["version", "ver"], "Shows version info", async () => 
                 "Konsole Version: {version}\nKonsole Branch: {branch}\nDeveloper/s: NicholasC"
             ),
-            new Command(["nl", "new-line"], "Prints a new line", async () => "\n"),
-            new Command(["reset"], "Resets the Konsole Instance", async () => {
-                this.buffer = []
-                this.runCommand(this.options.initCommand);
-            })
+            new Command(["nl", "new-line"], "Prints a new line", async () => "\n")
         );
     }
 
+    clearIntervals() {
+        intervals.forEach(clearInterval)
+        intervals.length = 0;
+    }
+
     startBlink() {
-        setInterval(() => {
+        intervals.push(setInterval(() => {
             this.blinkTime += 100;
             if (this.blinkTime >= 500) {
                 this.cursorVisible = !this.cursorVisible;
                 this.blinkTime = 0;
                 this.update();
             }
-        }, 100);
+        }, 100));
     }
 
     setupInputHandler() {
