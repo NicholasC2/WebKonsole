@@ -6,8 +6,6 @@ class Command {
     }
 }
 
-const intervals = []
-
 class Konsole {
     constructor(container, options = {}, style = {}) {
         this.container = container;
@@ -98,20 +96,15 @@ class Konsole {
         );
     }
 
-    clearIntervals() {
-        intervals.forEach(clearInterval)
-        intervals.length = 0;
-    }
-
     startBlink() {
-        intervals.push(setInterval(() => {
+        setInterval(() => {
             this.blinkTime += 100;
             if (this.blinkTime >= 500) {
                 this.cursorVisible = !this.cursorVisible;
                 this.blinkTime = 0;
                 this.update();
             }
-        }, 100));
+        }, 100);
     }
 
     setupInputHandler() {
