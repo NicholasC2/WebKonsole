@@ -48,7 +48,6 @@ const defaultCommands = [
         "Prints text to the console.",
         "Usage: echo <text>\nPrints the provided text back to the screen.",
         async function (_, args) {
-            if (args.includes("--help")) return this.options.commands.find(c => c.alias.includes("echo")).longDesc;
             if (args.length === 0) return "Usage: echo <text>";
             return args.join(" ");
         }
