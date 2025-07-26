@@ -26,7 +26,7 @@ const defaultOptions = {
     initCommand: "echo {version_ascii}\nv{version}-{branch}",
     prefix: "$ ",
     variables: {
-        version: "1.1.3",
+        version: "1.2.0",
         version_ascii: `\
 :::    ::: ::::::::  ::::    :::  ::::::::   ::::::::  :::        :::::::::: 
 :+:   :+: :+:    :+: :+:+:   :+: :+:    :+: :+:    :+: :+:        :+:        
