@@ -314,12 +314,6 @@ class Konsole {
             const alias = args.shift();
             const command = this.options.commands.find(cmd => cmd.alias.includes(alias));
 
-            if (args.includes("--help")) {
-                this.buffer[this.buffer.length - 1] = command.longDesc;
-                this.buffer.push("");
-                continue;
-            }
-
             if (command) {
                 const result = await command.run.call(this, alias, args);
                 if (result) {
