@@ -117,7 +117,7 @@ const defaultCommands = [
 
     new Command(
         ["vars", "variables"],
-        "Shows available template variables.",
+        "Lists all variables. ",
         "Usage: vars\nLists all available variables that can be used with curly braces (e.g., {version}).",
         async function () {
             const vars = Object.entries(this.options.variables);
