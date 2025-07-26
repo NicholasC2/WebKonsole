@@ -21,29 +21,12 @@ Try it here: https://nicholasc2.github.io/webkonsole
 
 ---
 
-## Features
-
-- Built with plain JavaScript
-- Easily register custom commands
-- History support (up and down arrow keys)
-- Variable replacement using `{variable}`
-- Works in any modern browser
-- Retro-styled look with blinking cursor
-
----
-
 ## Usage
 
 ```js
 const container = document.getElementById("terminal");
 
-const konsole = new Konsole(container, {
-    initCommand: "echo {welcome-message}",
-    prefix: "$ ",
-    variables: {
-        "welcome-message": "Hello, World!\nWelcome to Konsole!"
-    }
-});
+const konsole = new Konsole(container);
 ```
 
 ---
@@ -64,32 +47,38 @@ const konsole = new Konsole(container, {
 
 ## Variable Replacement
 
-Variables wrapped in curly braces will be dynamically replaced:
+Variables wrapped in curly braces will be dynamically replaced, for example
+`echo {branch}`
+will be replaced with
+`echo stable`
 
-`echo {version}`
-
-Defined like this:
+Variables are defined like this:
 
 ```js
-variables: {
-    version: "1.1.3",
-    branch: "stable"
-}
+const container = document.getElementById("terminal");
+
+const konsole = new Konsole(container, {
+    variables: {
+        "hello": "world"
+    }
+}};
 ```
 
 ---
 
 ## Styling
 
-You can override default styles by passing a `style` object:
+You can override default styles:
 
 ```js
-style: {
+const container = document.getElementById("terminal");
+
+const konsole = new Konsole(container, null, {
   color: "lime",
   backgroundColor: "black",
   fontFamily: "monospace",
   padding: "5px"
-}
+}};
 ```
 
 ---
@@ -98,5 +87,3 @@ style: {
 
 Created by NicholasC  
 ASCII Art from: https://patorjk.com/software/taag/
-
----
