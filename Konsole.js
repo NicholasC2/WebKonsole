@@ -14,12 +14,12 @@ const defaultStyle = {
     color: "lime",
     cursor: "text",
     fontFamily: "monospace",
-    height: "100%",
     overflowX: "auto",
     overflowY: "auto",
     padding: "5px",
     whiteSpace: "pre",
     width: "100%",
+    height: "100%",
 };
 
 const defaultOptions = {
