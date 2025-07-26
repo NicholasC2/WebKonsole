@@ -33,15 +33,15 @@ const konsole = new Konsole(container);
 
 ## Built-in Commands
 
-`echo <text>`      - Prints text to the console  
-`clear` or `cls`     - Clears the terminal screen  
-`wait <ms>`        - Waits for a given number of milliseconds  
-`help` or `?`        - Lists available commands  
-`version` or `ver`   - Displays version info  
-`nl`               - Prints a blank line  
-`vars`             - Lists all variables  
-`about`            - Shows Konsole info  
-`set` or `setvar`    - Sets a variable for use in commands  
+`echo` or `print` - Prints text to the console  
+`clear` or `cls` - Clears the terminal screen  
+`wait` or `delay` - Waits for a given number of milliseconds  
+`help` or `?` - Lists available commands  
+`version` or `ver` - Displays version info  
+`nl`, `newline` or `br` - Prints a blank line  
+`vars` or `variables` - Lists all variables  
+`about` - Shows Konsole info  
+`set` or `setvar` - Sets a variable for use in commands  
 
 ---
 
