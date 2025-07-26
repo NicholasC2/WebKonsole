@@ -49,7 +49,7 @@ const konsole = new Konsole(container, {
 ---
 
 ## Built-in Commands
-
+-
 `echo <text>`      - Prints text  
 `clear` or `cls`      - Clears the terminal  
 `wait <ms>`        - Pauses for X milliseconds  
