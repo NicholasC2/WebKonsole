@@ -49,7 +49,7 @@ const konsole = new Konsole(container, {
 ---
 
 ## Built-in Commands
--
+
 `echo <text>`      - Prints text  
 `clear` or `cls`      - Clears the terminal  
 `wait <ms>`        - Pauses for X milliseconds  
@@ -59,6 +59,7 @@ const konsole = new Konsole(container, {
 `vars`             - Lists all variables  
 `about`            - Shows credits and project info
 `set` or `setvar`    - Sets a variable for use in commands
+
 ---
 
 ## Variable Replacement
