@@ -17,7 +17,7 @@ It supports custom commands, ANSI-style behavior, and dynamic variable injection
 
 ## Live Demo
 
-Try it here: [https://nicholasc2.github.io/webkonsole](https://nicholasc2.github.io/WebKonsole/)
+Try it here: https://nicholasc2.github.io/WebKonsole/
 
 ---
 
