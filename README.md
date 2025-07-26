@@ -5,13 +5,9 @@
 Konsole is a lightweight, extensible terminal emulator designed to run directly in your browser.  
 It supports custom commands, ANSI-style behavior, and dynamic variable injection — all in a slick retro terminal UI.
 
----
-
 ## Live Demo
 
 Try it here: https://nicholasc2.github.io/WebKonsole/
-
----
 
 ## Usage
 
@@ -20,8 +16,6 @@ const container = document.getElementById("terminal");
 
 const konsole = new Konsole(container);
 ```
-
----
 
 ## Built-in Commands
 
@@ -34,8 +28,6 @@ const konsole = new Konsole(container);
 `vars` or `variables` - Lists all variables  
 `about` - Shows Konsole info  
 `set` or `setvar` - Sets a variable for use in commands  
-
----
 
 ## Variable Replacement
 
@@ -56,8 +48,6 @@ const konsole = new Konsole(container, {
 }};
 ```
 
----
-
 ## Styling
 
 You can override default styles:
@@ -72,8 +62,6 @@ const konsole = new Konsole(container, null, {
   padding: "5px"
 }};
 ```
-
----
 
 ## Credits
 
