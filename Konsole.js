@@ -7,6 +7,13 @@ class Command {
     }
 }
 
+const copyright_elem = document.createElement("div");
+copyright_elem.innerText = "Copyright © 2025 NicholasC";
+copyright_elem.style.right = "10px";
+copyright_elem.style.bottom = "10px";
+copyright_elem.style.position = "absolute";
+copyright_elem.style.color = "white";
+copyright_elem.style.opacity = "50%"
 
 const defaultStyle = {
     backgroundColor: "black",
@@ -288,6 +295,7 @@ class Konsole {
         const output = this.buffer.join("\n");
         const cursor = (this.showFocus && this.cursorVisible && !this.command_running) ? "_" : " ";
         this.container.innerText = output + cursor;
+        terminal.container.appendChild(copyright_elem);
     }
 
     async replaceVars(text = "") {
