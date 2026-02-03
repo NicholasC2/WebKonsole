@@ -2,8 +2,8 @@
 
 # Konsole – Browser Terminal Emulator
 
-Konsole is a lightweight, extensible terminal emulator designed to run directly in your browser.  
-It supports custom commands, ANSI-style behavior, and dynamic variable injection — all in a slick retro terminal UI.
+Konsole is a lightweight, extensible console, designed to fit perfectly into any project.  
+It supports custom commands, and dynamic variable injection - all in a slick terminal UI, designed for scalablilty and ease-of-use.
 
 ## Live Demo
 
