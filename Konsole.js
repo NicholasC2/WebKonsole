@@ -30,18 +30,18 @@ const defaultStyle = {
 };
 
 const defaultOptions = {
-    initCommand: "echo {version_ascii}\nv{version}-{branch}",
+    initCommand: "echo {version_ascii}\nv{version}-{branch}\nhttps://github.com/NicholasC2/WebKonsole\n",
     prefix: "$ ",
     variables: {
-        version: "1.2.0",
+        version: "1.3.0",
         version_ascii: `\
-:::    ::: ::::::::  ::::    :::  ::::::::   ::::::::  :::        :::::::::: 
-:+:   :+: :+:    :+: :+:+:   :+: :+:    :+: :+:    :+: :+:        :+:        
-+:+  +:+  +:+    +:+ :+:+:+  +:+ +:+        +:+    +:+ +:+        +:+        
-+#++:++   +#+    +:+ +#+ +:+ +#+ +#++:++#++ +#+    +:+ +#+        +#++:++#   
-+#+  +#+  +#+    +#+ +#+  +#+#+#        +#+ +#+    +#+ +#+        +#+        
-#+#   #+# #+#    #+# #+#   #+#+# #+#    #+# #+#    #+# #+#        #+#        
-###    ### ########  ###    ####  ########   ########  ########## ##########`,
+<c:#00ff0030>:::    ::: ::::::::  ::::    :::  ::::::::   ::::::::  :::        :::::::::: </c>
+<c:#00ff0050>:+:   :+: :+:    :+: :+:+:   :+: :+:    :+: :+:    :+: :+:        :+:        </c>
+<c:#00ff0070>+:+  +:+  +:+    +:+ :+:+:+  +:+ +:+        +:+    +:+ +:+        +:+        </c>
+<c:#00ff0090>+#++:++   +#+    +:+ +#+ +:+ +#+ +#++:++#++ +#+    +:+ +#+        +#++:++#   </c>
+<c:#00ff00B0>+#+  +#+  +#+    +#+ +#+  +#+#+#        +#+ +#+    +#+ +#+        +#+        </c>
+<c:#00ff00D0>#+#   #+# #+#    #+# #+#   #+#+# #+#    #+# #+#    #+# #+#        #+#        </c>
+<c:#00ff00F0>###    ### ########  ###    ####  ########   ########  ########## ########## </c>`,
         ascii_gen: "https://patorjk.com/software/taag/#p=display&f=Alligator2&t=Konsole",
         branch: "stable",
     },
@@ -187,6 +187,27 @@ class Konsole {
         this.runCommand(this.options.initCommand);
     }
 
+    formatOutput(text) {
+        let out = text
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;");
+
+        out = out.replace(
+            /&lt;c:([^&]+?)&gt;([\s\S]*?)&lt;\/c&gt;/g,
+            (m, color, content) => {
+                return `<span style="color:${color}">${content}</span>`;
+            }
+        );
+
+        out = out.replace(
+            /(https?:\/\/[^\s]+)/g,
+            `<a href="$1" target="_blank" rel="noopener noreferrer" style="color:#4f4ff7">$1</a>`
+        );
+
+        return out;
+    }
+
     registerDefaultCommands() {
         this.options.commands.push(...defaultCommands);
         this.options.defaultCommandsHandled = true;
@@ -294,8 +315,8 @@ class Konsole {
     update() {
         const output = this.buffer.join("\n");
         const cursor = (this.showFocus && this.cursorVisible && !this.command_running) ? "_" : " ";
-        this.container.innerText = output + cursor;
-        terminal.container.appendChild(copyright_elem);
+        this.container.innerHTML = this.formatOutput(output + cursor);
+        this.container.appendChild(copyright_elem);
     }
 
     async replaceVars(text = "") {
