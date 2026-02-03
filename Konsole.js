@@ -34,7 +34,7 @@ const defaultOptions = {
     prefix: "$ ",
     cursor: "_",
     variables: {
-        version: "1.4.1",
+        version: "1.4.2",
         version_ascii: `\
 <c:#00ff0030>:::    ::: ::::::::  ::::    :::  ::::::::   ::::::::  :::        :::::::::: </c>
 <c:#00ff0050>:+:   :+: :+:    :+: :+:+:   :+: :+:    :+: :+:    :+: :+:        :+:        </c>
@@ -243,13 +243,14 @@ class Konsole {
 
             switch (e.key) {
                 case "Enter":
-                    this.update(this.cursorText)
-                    if (this.cursorText.trim()) {
-                        if (this.history[0] !== this.cursorText) this.history.unshift(this.cursorText);
+                    const input = this.cursorText;
+                    this.cursorText = "";
+                    this.update(input);
+                    if (input.trim()) {
+                        if (this.history[0] !== input) this.history.unshift(input);
                         this.historyIndex = 0;
                     }
-                    await this.runCommand(this.cursorText);
-                    this.cursorText = "";
+                    await this.runCommand(input);
                     break;
 
                 case "Backspace":
@@ -300,7 +301,7 @@ class Konsole {
     navigateHistory(direction) {
         this.historyIndex = Math.max(0, Math.min(this.historyIndex - direction, this.history.length));
         const entry = this.history[this.historyIndex - 1] || "";
-        this.cursorText = this.options.prefix + entry;
+        this.cursorText = entry;
     }
 
     scrollToBottom() {
