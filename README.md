@@ -37,8 +37,8 @@ will be replaced with
 `echo stable`
 
 Colors formatted like this:
-`<c:#HEX>COLOURED TEXT</c>`
-will be replaced with the color defined in HEX.
+`<c:#HEX>COLORED TEXT</c>`
+will be replaced with the COLORED TEXT colored with the color defined in HEX.
 
 Variables are defined like this:
 
