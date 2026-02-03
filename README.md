@@ -1,6 +1,6 @@
 ![Recording 2025-07-26 204158](https://github.com/user-attachments/assets/6f5cefc1-ab97-4e89-8969-11edd19b4c7e)
 
-# Konsole – Browser Terminal Emulator
+# Konsole – Browser Console
 
 Konsole is a lightweight, extensible console, designed to fit perfectly into any project.  
 It supports custom commands, custom scripts, and dynamic variable injection - all in a slick terminal UI, designed for scalablilty and ease-of-use.
