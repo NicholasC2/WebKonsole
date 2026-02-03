@@ -34,7 +34,7 @@ const defaultOptions = {
     prefix: "$ ",
     cursor: "_",
     variables: {
-        version: "1.4.5",
+        version: "1.4.6",
         version_ascii: `\
 :::    ::: ::::::::  ::::    :::  ::::::::   ::::::::  :::        :::::::::: 
 :+:   :+: :+:    :+: :+:+:   :+: :+:    :+: :+:    :+: :+:        :+:        
@@ -172,7 +172,7 @@ const defaultCommands = [
                 const result = await fetch(args[0])
                 if(!result.ok) return "<err>Inaccessible script location</err>";
                 const script = await result.text()
-                return await this.runCommand(script);
+                return await this.runCommand(script, true);
             } catch(err) {
                 return `<err>Failed to fetch script: ${err.message}</err>`
             }
@@ -372,7 +372,7 @@ class Konsole {
         return text.replaceAll("\\n", "\n");
     }
 
-    async runCommand(inputText) {
+    async runCommand(inputText, inline = false) {
         this.commandRunning = true;
 
         const lines = inputText.replaceAll(";", "\n").split("\n").map(l => l.trim()).filter(Boolean);
@@ -392,7 +392,7 @@ class Konsole {
                 this.update(`\nUnknown command: ${alias}`);
             }
         }
-        this.update("\n"+this.options.prefix);
+        if(!inline) this.update("\n"+this.options.prefix);
         this.commandRunning = false;
     }
 }
