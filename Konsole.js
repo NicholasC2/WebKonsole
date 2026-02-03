@@ -34,7 +34,7 @@ const defaultOptions = {
     prefix: "$ ",
     cursor: "_",
     variables: {
-        version: "1.4.3",
+        version: "1.4.4",
         version_ascii: `\
 <c:#00ff0030>:::    ::: ::::::::  ::::    :::  ::::::::   ::::::::  :::        :::::::::: </c>
 <c:#00ff0050>:+:   :+: :+:    :+: :+:+:   :+: :+:    :+: :+:    :+: :+:        :+:        </c>
@@ -172,7 +172,7 @@ const defaultCommands = [
                 const result = await fetch(args[0])
                 if(!result.ok) return "<err>Inaccessible script location</err>";
                 const script = await result.text()
-                return await _.runCommand(script);
+                return await this.runCommand(script);
             } catch(err) {
                 return `<err>Failed to fetch script: ${err.message}</err>`
             }
