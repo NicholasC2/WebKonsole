@@ -7,13 +7,13 @@ class Command {
     }
 }
 
-const copyright_elem = document.createElement("div");
-copyright_elem.innerText = "Copyright © 2025 NicholasC";
-copyright_elem.style.right = "10px";
-copyright_elem.style.bottom = "10px";
-copyright_elem.style.position = "absolute";
-copyright_elem.style.color = "white";
-copyright_elem.style.opacity = "50%"
+const copyrightElem = document.createElement("div");
+copyrightElem.innerText = "Copyright © 2025 NicholasC";
+copyrightElem.style.right = "10px";
+copyrightElem.style.bottom = "10px";
+copyrightElem.style.position = "absolute";
+copyrightElem.style.color = "white";
+copyrightElem.style.opacity = "50%"
 
 const defaultStyle = {
     backgroundColor: "black",
@@ -32,8 +32,9 @@ const defaultStyle = {
 const defaultOptions = {
     initCommand: "echo {version_ascii}\nv{version}-{branch}\nhttps://github.com/NicholasC2/WebKonsole\n",
     prefix: "$ ",
+    cursor: "|",
     variables: {
-        version: "1.3.0",
+        version: "1.4.0",
         version_ascii: `\
 <c:#00ff0030>:::    ::: ::::::::  ::::    :::  ::::::::   ::::::::  :::        :::::::::: </c>
 <c:#00ff0050>:+:   :+: :+:    :+: :+:+:   :+: :+:    :+: :+:    :+: :+:        :+:        </c>
@@ -65,7 +66,7 @@ const defaultCommands = [
         "Clears the terminal screen.",
         "Usage: clear\nResets the console display and clears all previous output.",
         async function () {
-            this.buffer = [this.options.prefix];
+            this.container.innerHTML = "";
         }
     ),
 
@@ -163,17 +164,23 @@ const defaultCommands = [
     )
 ];
 
+let cursorOldText = ""
+
 class Konsole {
     constructor(container, options = defaultOptions, style = {}) {
         this.container = container;
-        this.buffer = [];
         this.cursorVisible = true;
         this.blinkTime = 0;
         this.history = [];
         this.historyIndex = 0;
         this.showFocus = false;
-        this.command_running = false;
+        this.commandRunning = false;
+        this.cursorElem = document.createElement("span")
+        this.cursorElem.style.userSelect = "none"
+        this.cursorTextElem = document.createElement("span")
+        this.cursorText = ""
 
+        this.container.appendChild(copyrightElem);
         this.style = Object.assign({}, defaultStyle, style);
         this.options = Object.assign({}, defaultOptions, options);
         Object.assign(this.container.style, this.style);
@@ -228,46 +235,44 @@ class Konsole {
         this.container.setAttribute("tabindex", "0");
 
         this.container.addEventListener("keydown", async (e) => {
-            if (this.command_running) return;
+            if (this.commandRunning) return;
 
-            e.preventDefault();
+            if(!e.ctrlKey || e.key.toLowerCase() !== "c") {
+                e.preventDefault();
+            }
             this.resetCursorBlink();
-
-            if (this.buffer.length === 0) this.buffer.push(this.options.prefix);
-
-            const idx = this.buffer.length - 1;
-            const line = this.buffer[idx];
-            const input = line.slice(this.options.prefix.length);
 
             switch (e.key) {
                 case "Enter":
-                    if (input.trim()) {
-                        if (this.history[0] !== input) this.history.unshift(input);
+                    this.update(this.cursorText)
+                    if (this.cursorText.trim()) {
+                        if (this.history[0] !== this.cursorText) this.history.unshift(this.cursorText);
                         this.historyIndex = 0;
                     }
-                    await this.runCommand(input);
+                    await this.runCommand(this.cursorText);
+                    this.cursorText = "";
                     break;
 
                 case "Backspace":
-                    this.handleBackspace(e, idx, line);
+                    this.cursorText = this.cursorText.slice(0,-1)
                     break;
 
                 case "ArrowUp":
-                    this.navigateHistory(-1, idx);
+                    this.navigateHistory(-1);
                     break;
 
                 case "ArrowDown":
-                    this.navigateHistory(1, idx);
+                    this.navigateHistory(1);
                     break;
 
                 default:
                     if (e.ctrlKey && e.key.toLowerCase() === "l") {
-                        this.buffer = [this.options.prefix];
+                        this.container.innerHTML = "";
                     } else if (e.ctrlKey && e.key.toLowerCase() === "v") {
                         const text = await navigator.clipboard.readText();
-                        this.buffer[idx] += text;
+                        this.cursorText += text;
                     } else if (e.key.length === 1 && !e.ctrlKey && !e.altKey) {
-                        this.buffer[idx] += e.key;
+                        this.cursorText += e.key;
                     }
                     break;
             }
@@ -293,30 +298,41 @@ class Konsole {
         this.blinkTime = 0;
     }
 
-    handleBackspace(e, idx, line) {
-        const { prefix } = this.options;
-        if (e.shiftKey) {
-            this.buffer[idx] = prefix;
-        } else if (line.length > prefix.length) {
-            this.buffer[idx] = line.slice(0, -1);
-        }
-    }
-
-    navigateHistory(direction, idx) {
+    navigateHistory(direction) {
         this.historyIndex = Math.max(0, Math.min(this.historyIndex - direction, this.history.length));
         const entry = this.history[this.historyIndex - 1] || "";
-        this.buffer[idx] = this.options.prefix + entry;
+        this.cursorText = this.options.prefix + entry;
     }
 
     scrollToBottom() {
         this.container.scrollTop = this.container.scrollHeight;
     }
 
-    update() {
-        const output = this.buffer.join("\n");
-        const cursor = (this.showFocus && this.cursorVisible && !this.command_running) ? "_" : " ";
-        this.container.innerHTML = this.formatOutput(output + cursor);
-        this.container.appendChild(copyright_elem);
+    update(...args) {
+        args.forEach((text)=>{
+            const newElem = document.createElement("span");
+            newElem.innerHTML = this.formatOutput(text);
+            this.container.appendChild(newElem);
+        })
+
+        if(this.cursorText != cursorOldText) {
+            this.cursorTextElem.innerText = this.cursorText
+            cursorOldText = this.cursorText
+            this.container.appendChild(this.cursorTextElem)
+        }
+
+        if(this.showFocus && this.cursorVisible && !this.commandRunning) {
+            if(this.cursorElem.style.display != "inline") {
+                this.cursorElem.style.display = "inline"
+            }
+        } else {
+            if(this.cursorElem.style.display != "none") {
+                this.cursorElem.style.display = "none"
+            }
+        }
+
+        this.cursorElem.innerText = this.options.cursor
+        this.container.appendChild(this.cursorElem)
     }
 
     async replaceVars(text = "") {
@@ -332,8 +348,7 @@ class Konsole {
     }
 
     async runCommand(inputText) {
-        this.command_running = true;
-        this.buffer.push("");
+        this.commandRunning = true;
 
         const lines = inputText.split(";").map(l => l.trim()).filter(Boolean);
 
@@ -346,17 +361,13 @@ class Konsole {
             if (command) {
                 const result = await command.run.call(this, alias, args);
                 if (result) {
-                    this.buffer[this.buffer.length - 1] = await this.replaceVars(result);
-                    this.buffer.push("");
+                    this.update("\n"+await this.replaceVars(result));
                 }
             } else {
-                this.buffer[this.buffer.length - 1] = `Unknown command: ${alias}`;
-                this.buffer.push("");
+                this.update(`\nUnknown command: ${alias}`);
             }
         }
-
-        this.buffer[this.buffer.length - 1] = this.options.prefix;
-        this.update();
-        this.command_running = false;
+        this.update("\n"+this.options.prefix);
+        this.commandRunning = false;
     }
 }
