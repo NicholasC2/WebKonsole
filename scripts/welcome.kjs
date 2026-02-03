@@ -1,0 +1,5 @@
+echo hi
+wait 1000
+echo welcome
+wait 1000
+echo to KONSOLE!!!

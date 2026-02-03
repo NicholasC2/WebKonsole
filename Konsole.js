@@ -30,11 +30,11 @@ const defaultStyle = {
 };
 
 const defaultOptions = {
-    initCommand: "echo {version_ascii}\nv{version}-{branch}\nhttps://github.com/NicholasC2/WebKonsole\n",
+    initCommand: "echo {version_ascii}\n echo v{version}-{branch}\n echo https://github.com/NicholasC2/WebKonsole",
     prefix: "$ ",
     cursor: "_",
     variables: {
-        version: "1.4.2",
+        version: "1.4.3",
         version_ascii: `\
 <c:#00ff0030>:::    ::: ::::::::  ::::    :::  ::::::::   ::::::::  :::        :::::::::: </c>
 <c:#00ff0050>:+:   :+: :+:    :+: :+:+:   :+: :+:    :+: :+:    :+: :+:        :+:        </c>
@@ -56,7 +56,7 @@ const defaultCommands = [
         "Prints text to the console.",
         "Usage: echo <text>\nPrints the provided text back to the screen.",
         async function (_, args) {
-            if (args.length === 0) return "Usage: echo <text>";
+            if (args.length === 0) return "<err>Usage: echo <text></err>";
             return args.join(" ");
         }
     ),
@@ -76,7 +76,7 @@ const defaultCommands = [
         "Usage: wait <ms>\nPauses the terminal for a specific number of milliseconds. Useful for scripting delays.",
         async function (_, args) {
             const time = parseInt(args[0], 10);
-            if (isNaN(time) || time < 0) return "Usage: wait <milliseconds>";
+            if (isNaN(time) || time < 0) return "<err>Usage: wait <milliseconds></err>";
             await new Promise(res => setTimeout(res, time));
         }
     ),
@@ -88,7 +88,7 @@ const defaultCommands = [
         async function (_, args) {
             if (args.length > 0) {
                 const cmd = this.options.commands.find(c => c.alias.includes(args[0]));
-                return cmd ? `${cmd.alias.join(" | ")}\n${cmd.longDesc}` : `No such command: ${args[0]}`;
+                return cmd ? `${cmd.alias.join(" | ")}\n${cmd.longDesc}` : `<err>No such command: ${args[0]}</err>`;
             }
 
             const lines = this.options.commands.map(cmd => {
@@ -129,7 +129,7 @@ const defaultCommands = [
         "Usage: vars\nLists all available variables that can be used with curly braces (e.g., {version}).",
         async function () {
             const vars = Object.entries(this.options.variables);
-            if (vars.length === 0) return "No variables defined.";
+            if (vars.length === 0) return "<err>No variables defined.</err>";
             
             return "Available Variables:\n" +
                 vars.map(([k, v]) => `  ${k} = ${typeof v === "string" && v.includes("\n") ? `[${v.split("\n")[0]}...]` : v}`).join("\n");
@@ -154,11 +154,28 @@ const defaultCommands = [
         "Sets a variable for use in commands.",
         "Usage: set <variable> <value>\nSets a variable that can be used in commands with curly braces (e.g., {variable}).",
         async function (_, args) {
-            if (args.length < 2) return "Usage: set <variable> <value>";
+            if (args.length < 2) return "<err>Usage: set <variable> <value></err>";
             const [key, ...valueParts] = args;
             const value = valueParts.join(" ");
             this.options.variables[key] = value;
             return `Variable ${key} set to "${value}"`;
+        }
+    ),
+
+    new Command(
+        ["run"],
+        "Runs a \".kjs\" script",
+        "Usage: run <script location>\nRuns a \".kjs\" script.",
+        async function(_, args) {
+            try {
+                if(args.length < 1) return "<err>Usage: run <script location></err>";
+                const result = await fetch(args[0])
+                if(!result.ok) return "<err>Inaccessible script location</err>";
+                const script = await result.text()
+                return await _.runCommand(script);
+            } catch(err) {
+                return `<err>Failed to fetch script: ${err.message}</err>`
+            }
         }
     )
 ];
@@ -201,9 +218,12 @@ class Konsole {
 
         out = out.replace(
             /&lt;c:([^&]+?)&gt;([\s\S]*?)&lt;\/c&gt;/g,
-            (m, color, content) => {
-                return `<span style="color:${color}">${content}</span>`;
-            }
+            (m, color, content) => `<span style="color:${color}">${content}</span>`
+        );
+
+        out = out.replace(
+            /&lt;err&gt;([\s\S]*?)&lt;\/err&gt;/g,
+            (m, content) => `<span style="color:red">${content}</span>`
         );
 
         out = out.replace(
@@ -241,20 +261,25 @@ class Konsole {
             }
             this.resetCursorBlink();
 
+            const input = this.cursorText;
+
             switch (e.key) {
                 case "Enter":
-                    const input = this.cursorText;
-                    this.cursorText = "";
-                    this.update(input);
-                    if (input.trim()) {
-                        if (this.history[0] !== input) this.history.unshift(input);
-                        this.historyIndex = 0;
+                    if(e.shiftKey) {
+                        this.cursorText += "\n";
+                    } else {
+                        this.cursorText = "";
+                        this.update(input);
+                        if (input.trim()) {
+                            if (this.history[0] !== input) this.history.unshift(input);
+                            this.historyIndex = 0;
+                        }
+                        await this.runCommand(input);
                     }
-                    await this.runCommand(input);
                     break;
 
                 case "Backspace":
-                    this.cursorText = this.cursorText.slice(0,-1)
+                    this.cursorText = input.slice(0,-1)
                     break;
 
                 case "ArrowUp":
@@ -350,7 +375,7 @@ class Konsole {
     async runCommand(inputText) {
         this.commandRunning = true;
 
-        const lines = inputText.split(";").map(l => l.trim()).filter(Boolean);
+        const lines = inputText.replaceAll(";", "\n").split("\n").map(l => l.trim()).filter(Boolean);
 
         for (const line of lines) {
             const replacedLine = await this.replaceVars(line);
