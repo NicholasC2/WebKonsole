@@ -3,7 +3,7 @@
 # Konsole – Browser Terminal Emulator
 
 Konsole is a lightweight, extensible console, designed to fit perfectly into any project.  
-It supports custom commands, and dynamic variable injection - all in a slick terminal UI, designed for scalablilty and ease-of-use.
+It supports custom commands, custom scripts, and dynamic variable injection - all in a slick terminal UI, designed for scalablilty and ease-of-use.
 
 ## Live Demo
 
@@ -66,6 +66,11 @@ const konsole = new Konsole(container, null, {
   padding: "5px"
 }};
 ```
+
+## Scripts
+
+scripts are run the same way commands are run.
+all scripts must be accessable via a fetch request, and must be on the same origin
 
 ## Credits
 
