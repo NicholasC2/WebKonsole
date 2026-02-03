@@ -142,9 +142,8 @@ const defaultCommands = [
         "Usage: about\nShows Konsole's developer and ASCII art source.",
         async function () {
             return [
-                "Konsole Emulator",
+                "For use where a console is needed on the web",
                 "  Created by: NicholasC",
-                "  Inspired by classic terminals.",
                 "  ASCII Art Source: {ascii_gen}"
             ].join("\n");
         }
@@ -371,3 +370,4 @@ class Konsole {
         this.commandRunning = false;
     }
 }
+
