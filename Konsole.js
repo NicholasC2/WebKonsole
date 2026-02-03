@@ -32,9 +32,9 @@ const defaultStyle = {
 const defaultOptions = {
     initCommand: "echo {version_ascii}\nv{version}-{branch}\nhttps://github.com/NicholasC2/WebKonsole\n",
     prefix: "$ ",
-    cursor: "|",
+    cursor: "_",
     variables: {
-        version: "1.4.0",
+        version: "1.4.1",
         version_ascii: `\
 <c:#00ff0030>:::    ::: ::::::::  ::::    :::  ::::::::   ::::::::  :::        :::::::::: </c>
 <c:#00ff0050>:+:   :+: :+:    :+: :+:+:   :+: :+:    :+: :+:    :+: :+:        :+:        </c>
