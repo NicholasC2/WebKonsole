@@ -2,8 +2,7 @@
 
 # Konsole – Browser Console
 
-Konsole is a lightweight, extensible console, designed to fit perfectly into any project.  
-It supports custom commands, custom scripts, and dynamic variable injection - all in a slick terminal UI, designed for scalablilty and ease-of-use.
+Konsole is a lightweight, extensible console, designed to fit perfectly into any project. It supports custom commands, custom scripts, and dynamic variable injection - all in a slick terminal UI, designed for scalablilty and ease-of-use.
 
 ## Live Demo
 
@@ -19,15 +18,16 @@ const konsole = new Konsole(container);
 
 ## Built-in Commands
 
-`echo` or `print` - Prints text to the console  
-`clear` or `cls` - Clears the terminal screen  
-`wait` or `delay` - Waits for a given number of milliseconds  
-`help` or `?` - Lists available commands  
-`version` or `ver` - Displays version info  
-`nl`, `newline` or `br` - Prints a blank line  
-`vars` or `variables` - Lists all variables  
-`about` - Shows Konsole info  
-`set` or `setvar` - Sets a variable for use in commands  
+`echo` or `print` - Prints text to the console.  
+`clear` or `cls` - Clears the terminal screen.  
+`wait` or `delay` - Waits for a given number of milliseconds.  
+`help` or `?` - Lists available commands.  
+`version` or `ver` - Displays version info.  
+`nl` or `newline` or `br` - Prints a blank line.  
+`vars` or `variables` - Lists all variables.  
+`about` - Displays Konsole info.  
+`set` or `setvar` - Sets a variable for use in commands.  
+`run` - Runs a ".kjs" script.  
 
 ## Variable Replacement
 
@@ -59,11 +59,13 @@ You can override default styles:
 ```js
 const container = document.getElementById("terminal");
 
-const konsole = new Konsole(container, null, {
-  color: "lime",
-  backgroundColor: "black",
-  fontFamily: "monospace",
-  padding: "5px"
+const konsole = new Konsole(container, {
+    style: {
+        "color": "lime",
+        "background-color": "black",
+        "font-family": "monospace",
+        "padding": "5px"
+    }
 }};
 ```
 

@@ -13,7 +13,7 @@ export class Command {
         alias: string[] = [],
         shortDesc = "",
         longDesc = "",
-        run: CommandRun = async () => "This command is missing the run function"
+        run: CommandRun = async () => "This command is missing the run function."
     ) {
         this.alias = alias;
         this.shortDesc = shortDesc;
@@ -97,7 +97,7 @@ export const defaultCommands = [
 
     new Command(
         ["vars", "variables"],
-        "Lists all variables. ",
+        "Lists all variables.",
         "Usage: vars\nLists all available variables that can be used with curly braces (e.g., {version}).",
         async function () {
             const vars = Object.entries(this.options.variables);
@@ -136,7 +136,7 @@ export const defaultCommands = [
 
     new Command(
         ["run"],
-        "Runs a \".kjs\" script",
+        "Runs a \".kjs\" script.",
         "Usage: run <script location>\nRuns a \".kjs\" script.",
         async function(_, args) {
             try {
