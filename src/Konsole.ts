@@ -1,4 +1,4 @@
-import { Command, defaultCommands } from "./Command";
+import { createCommand, getCommands } from "./Command";
 
 export const defaultVariables = {
     "version": "1.0.0",
@@ -9,7 +9,7 @@ export const defaultVariables = {
 +#++:++   +#+    +:+ +#+ +:+ +#+ +#++:++#++ +#+    +:+ +#+        +#++:++#   
 +#+  +#+  +#+    +#+ +#+  +#+#+#        +#+ +#+    +#+ +#+        +#+        
 #+#   #+# #+#    #+# #+#   #+#+# #+#    #+# #+#    #+# #+#        #+#        
-###    ### ########  ###    ####  ########   ########  ########## ########## `), // https://patorjk.com/software/taag/#p=display&f=Alligator2&t=Konsole
+###    ### ########  ###    ####  ########   ########  ########## ########## `, // https://patorjk.com/software/taag/#p=display&f=Alligator2&t=Konsole
     "ascii_gen": "https://patorjk.com/software/taag/",
     "branch": "stable"
 }
@@ -32,17 +32,12 @@ export class KonsoleOptions {
     prefix: string
     cursor: string
     variables: Object
-    commands: Command[]
 
-    constructor({ initCommand, prefix, cursor, variables, commands }: KonsoleOptions) {
+    constructor({ initCommand, prefix, cursor, variables }: KonsoleOptions) {
         this.initCommand = initCommand ?? "echo {version_ascii}\n echo v{version}-{branch}\n echo https://github.com/NicholasC2/WebKonsole";
         this.prefix = prefix ?? "$ ";
         this.cursor = cursor ?? "_";
         this.variables = Object.assign(defaultVariables, variables);
-        this.commands = [
-            ...defaultCommands,
-            ...commands ?? []
-        ]
     }
 }
 
@@ -66,7 +61,7 @@ export class Konsole {
     commandRunning: boolean = false;
     options: KonsoleOptions;
 
-    constructor(container: HTMLElement, options: KonsoleOptionsInit) {
+    constructor(container: HTMLElement, options: KonsoleOptions) {
         this.container = container;
         this.options = new KonsoleOptions(options);
 
@@ -252,8 +247,8 @@ export class Konsole {
         let prev = "";
         do {
             prev = text;
-            for (const variable of this.options.variables) {
-                text = text.replace(`{${variable.key}}`, variable.value);
+            for (const [key, value] of Object.entries(this.options.variables)) {
+                text = text.replace(`{${key}}`, value);
             }
         } while (text !== prev);
 
@@ -272,7 +267,7 @@ export class Konsole {
             const args = replacedLine.split(" ");
             const alias = args.shift();
             if(!alias) continue;
-            const command = this.options.commands.find(cmd => cmd.alias.includes(alias));
+            const command = getCommands().find(cmd => cmd.alias.includes(alias));
 
             if (command) {
                 const result = await command.run.call(this, alias, args);

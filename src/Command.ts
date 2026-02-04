@@ -27,6 +27,10 @@ class Command {
 
 const commands: Command[] = []
 
+export function getCommands() {
+    return commands;
+}
+
 export function createCommand(alias: string[], shortDesc: string, longDesc: string, run: CommandRun) {
     for(const command of commands) {
         const found: any = command.alias.find((alias, i) => {
@@ -47,8 +51,8 @@ export function createCommand(alias: string[], shortDesc: string, longDesc: stri
     }
 }
 
-export const defaultCommands = [
-    new Command(
+export function registerDefaultCommands() {
+    createCommand(
         ["echo", "print"],
         "Prints text to the console.",
         "Usage: echo <text>\nPrints the provided text back to the screen.",
@@ -56,18 +60,18 @@ export const defaultCommands = [
             if (args.length === 0) return "<err>Usage: echo <text></err>";
             return args.join(" ");
         }
-    ),
+    );
 
-    new Command(
+    createCommand(
         ["clear", "cls"],
         "Clears the terminal screen.",
         "Usage: clear\nResets the console display and clears all previous output.",
         async function (this: Konsole) {
             this.container.innerHTML = "";
         }
-    ),
+    );
 
-    new Command(
+    createCommand(
         ["wait", "delay"],
         "Waits for a given number of milliseconds.",
         "Usage: wait <ms>\nPauses the terminal for a specific number of milliseconds. Useful for scripting delays.",
@@ -76,9 +80,9 @@ export const defaultCommands = [
             if (isNaN(time) || time < 0) return "<err>Usage: wait <milliseconds></err>";
             await new Promise(res => setTimeout(res, time));
         }
-    ),
+    );
 
-    new Command(
+    createCommand(
         ["help", "?"], 
         "Lists available commands.",
         "Usage: help [command]\nWithout arguments, lists all available commands.\nUse `help <command>` for detailed info.",
@@ -95,9 +99,9 @@ export const defaultCommands = [
 
             return "Available Commands:\n" + lines.join("\n");
         }
-    ),
+    );
 
-    new Command(
+    createCommand(
         ["version", "ver"],
         "Displays version info.",
         "Usage: version\nShows current version, branch, and developer information.",
@@ -109,18 +113,18 @@ export const defaultCommands = [
                 `  Dev     : NicholasC`
             ].join("\n");
         }
-    ),
+    );
 
-    new Command(
+    createCommand(
         ["nl", "newline", "br"],
         "Prints a blank line.",
         "Usage: nl\nInserts a newline into the output.",
         async function () {
             return "\n";
         }
-    ),
+    );
 
-    new Command(
+    createCommand(
         ["vars", "variables"],
         "Lists all variables.",
         "Usage: vars\nLists all available variables that can be used with curly braces (e.g., {version}).",
@@ -131,9 +135,9 @@ export const defaultCommands = [
             return "Available Variables:\n" +
                 vars.map((v) => `  ${v.key} = ${v.value.includes("\n") ? `[${v.value.split("\n")[0]}...]` : v.value}`).join("\n");
         }
-    ),
+    );
 
-    new Command(
+    createCommand(
         ["about"],
         "Displays Konsole info.",
         "Usage: about\nShows Konsole's developer and ASCII art source.",
@@ -144,9 +148,9 @@ export const defaultCommands = [
                 "  ASCII Art Source: {ascii_gen}"
             ].join("\n");
         }
-    ),
+    );
 
-    new Command(
+    createCommand(
         ["set", "setvar"],
         "Sets a variable for use in commands.",
         "Usage: set <variable> <value>\nSets a variable that can be used in commands with curly braces (e.g., {variable}).",
@@ -162,9 +166,9 @@ export const defaultCommands = [
             }
             return `Variable ${key} set to "${value}"`;
         }
-    ),
+    );
 
-    new Command(
+    createCommand(
         ["run"],
         "Runs a \".ks\" script.",
         "Usage: run <script location>\nRuns a \".ks\" script.",
@@ -182,5 +186,5 @@ export const defaultCommands = [
                 return `<err>Failed to fetch script: ${String(err)}</err>`;
             }
         }
-    )
-];
+    );
+}
