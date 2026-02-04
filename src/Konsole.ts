@@ -1,5 +1,18 @@
-import { Variable, defaultVariables } from "./Variable";
 import { Command, defaultCommands } from "./Command";
+
+export const defaultVariables = {
+    "version": "1.0.0",
+    "version_ascii": `\
+:::    ::: ::::::::  ::::    :::  ::::::::   ::::::::  :::        :::::::::: 
+:+:   :+: :+:    :+: :+:+:   :+: :+:    :+: :+:    :+: :+:        :+:        
++:+  +:+  +:+    +:+ :+:+:+  +:+ +:+        +:+    +:+ +:+        +:+        
++#++:++   +#+    +:+ +#+ +:+ +#+ +#++:++#++ +#+    +:+ +#+        +#++:++#   
++#+  +#+  +#+    +#+ +#+  +#+#+#        +#+ +#+    +#+ +#+        +#+        
+#+#   #+# #+#    #+# #+#   #+#+# #+#    #+# #+#    #+# #+#        #+#        
+###    ### ########  ###    ####  ########   ########  ########## ########## `), // https://patorjk.com/software/taag/#p=display&f=Alligator2&t=Konsole
+    "ascii_gen": "https://patorjk.com/software/taag/",
+    "branch": "stable"
+}
 
 const defaultStyle = {
     "background-color": "black",
@@ -14,31 +27,18 @@ const defaultStyle = {
     "height": "100%"
 }
 
-type KonsoleOptionsInit = {
-    initCommand?: string;
-    prefix?: string;
-    cursor?: string;
-    variables?: Record<string, string>;
-    commands?: Command[];
-};
-
 export class KonsoleOptions {
     initCommand: string
     prefix: string
     cursor: string
-    variables: Variable[]
+    variables: Object
     commands: Command[]
 
-    constructor({ initCommand, prefix, cursor, variables, commands }: KonsoleOptionsInit = {}) {
+    constructor({ initCommand, prefix, cursor, variables, commands }: KonsoleOptions) {
         this.initCommand = initCommand ?? "echo {version_ascii}\n echo v{version}-{branch}\n echo https://github.com/NicholasC2/WebKonsole";
         this.prefix = prefix ?? "$ ";
         this.cursor = cursor ?? "_";
-        this.variables = [
-            ...defaultVariables,
-            ...Object.entries(variables ?? {}).map(
-                ([key, value]) => new Variable(key, value)
-            )
-        ]
+        this.variables = Object.assign(defaultVariables, variables);
         this.commands = [
             ...defaultCommands,
             ...commands ?? []

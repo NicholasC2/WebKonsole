@@ -6,7 +6,7 @@ export type CommandRun = (
     args: string[]
 ) => Promise<string | void>;
   
-export class Command {
+class Command {
     alias: string[];
     shortDesc: string;
     longDesc: string;
@@ -22,6 +22,28 @@ export class Command {
         this.shortDesc = shortDesc;
         this.longDesc = longDesc || shortDesc;
         this.run = run;
+    }
+}
+
+const commands: Command[] = []
+
+export function createCommand(alias: string[], shortDesc: string, longDesc: string, run: CommandRun) {
+    for(const command of commands) {
+        const found: any = command.alias.find((alias, i) => {
+            if(commands.some(c => c.alias.includes(alias))) {
+                return i;
+            } else {
+                return -1;
+            }
+        });
+
+        const newCommand = new Command(alias, shortDesc, longDesc, run);
+
+        if(found != -1) {
+            commands[found] = newCommand
+        } else {
+            commands.push(newCommand)
+        }
     }
 }
 
