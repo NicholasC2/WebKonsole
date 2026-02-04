@@ -49,8 +49,8 @@ const konsole = new Konsole(container, {
 
 ## Colors
 
-Colors formatted like this:  
-`<c:COLOR>COLORED TEXT</c>`  
+Colors formatted like
+`<c:COLOR>COLORED TEXT</c>`
 will be replaced with the COLORED TEXT colored with the color defined in COLOR using standard css color tags.
 
 ## Scripts
