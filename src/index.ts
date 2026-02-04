@@ -1,0 +1,1 @@
+export import { Konsole } from "./Konsole"

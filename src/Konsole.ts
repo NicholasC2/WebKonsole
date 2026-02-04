@@ -4,13 +4,20 @@ import { Command, defaultCommands } from "./Command";
 export class KonsoleOptions {
     initCommand: string
     prefix: string
-    cursor: string
     variables: Variable[]
     commands: Command[]
-    constructor(initCommand = "echo {version_ascii}\n echo v{version}-{branch}\n echo https://github.com/NicholasC2/WebKonsole", prefix = "$ ", cursor = "_", variables = defaultVariables, commands = defaultCommands) {
+    cursor: {
+        blinkTime: number;
+        character: string;
+    }
+
+    constructor(initCommand: string, prefix = "$ ", cursor = "_", cursorBlinkTime = 1, variables = defaultVariables, commands = defaultCommands) {
         this.initCommand = initCommand
         this.prefix = prefix
-        this.cursor = cursor
+        this.cursor = {
+            blinkTime: cursorBlinkTime,
+            character: cursor
+        }
         this.variables = variables
         this.commands = commands
     }
@@ -18,7 +25,7 @@ export class KonsoleOptions {
 
 export class Konsole {
     container: HTMLElement;
-    focused: boolean;
+    focused: boolean = false;
     cursor: {
         visible: boolean;
         blinkTime: number;
@@ -33,24 +40,39 @@ export class Konsole {
         index: number;
         entries: string[];
     };
-    commandRunning: boolean;
+    commandRunning: boolean = false;
     options: KonsoleOptions;
 
     constructor(container: HTMLElement, options: KonsoleOptions) {
         this.container = container;
         this.options = options;
 
-        this.cursor.element = document.createElement("div");
-        this.input.element = document.createElement("div");
-        this.container.appendChild(this.cursor.element);
+        this.cursor = {
+            blinkTime: options.cursor.blinkTime,
+            element: document.createElement("div"),
+            visible: false
+        }
+
+        this.input = {
+            element: document.createElement("div"),
+            previous: "",
+            text: ""
+        }
+
+        this.history = {
+            index: 0,
+            entries: []
+        }
+
         this.container.appendChild(this.input.element);
+        this.container.appendChild(this.cursor.element);
 
         this.setupInputHandler();
         this.startBlink();
         this.runCommand(this.options.initCommand);
     }
 
-    formatOutput(text) {
+    formatOutput(text: string) {
         let out = text
             .replace(/&/g, "&amp;")
             .replace(/</g, "&lt;")
@@ -58,12 +80,12 @@ export class Konsole {
 
         out = out.replace(
             /&lt;c:([^&]+?)&gt;([\s\S]*?)&lt;\/c&gt;/g,
-            (_, color, content) => `<span style="color:${color}">${content}</span>`
+            (_, color:string, content:string) => `<span style="color:${color}">${content}</span>`
         );
 
         out = out.replace(
             /&lt;err&gt;([\s\S]*?)&lt;\/err&gt;/g,
-            (_, content) => `<span style="color:red">${content}</span>`
+            (_, content:string) => `<span style="color:red">${content}</span>`
         );
 
         out = out.replace(
@@ -106,7 +128,7 @@ export class Konsole {
                         this.input.text = "";
                         this.update(input);
                         if (input.trim()) {
-                            if (this.history[0] !== input) this.history.entries.unshift(input);
+                            if (this.history.entries[0] !== input) this.history.entries.unshift(input);
                             this.history.index = 0;
                         }
                         await this.runCommand(input);
@@ -158,7 +180,7 @@ export class Konsole {
         this.cursor.blinkTime = 0;
     }
 
-    navigateHistory(direction) {
+    navigateHistory(direction: number) {
         this.history.index = Math.max(0, Math.min(this.history.index - direction, this.history.entries.length));
         const entry = this.history.entries[this.history.index - 1] || "";
         this.input.text = entry;
@@ -168,7 +190,7 @@ export class Konsole {
         this.container.scrollTop = this.container.scrollHeight;
     }
 
-    update(...args) {
+    update(...args: string[]) {
         args.forEach((text)=>{
             const newElem = document.createElement("span");
             newElem.innerHTML = this.formatOutput(text);
@@ -191,7 +213,7 @@ export class Konsole {
             }
         }
 
-        this.cursor.element.innerText = this.options.cursor
+        this.cursor.element.innerText = this.options.cursor.character
         this.container.appendChild(this.cursor.element)
     }
 
@@ -199,15 +221,15 @@ export class Konsole {
         let prev = "";
         do {
             prev = text;
-            for (const variable of Object.entries(this.options.variables)) {
-                text = text.replace(`{${variable}}`, val.value);
+            for (const variable of this.options.variables) {
+                text = text.replace(`{${variable.key}}`, variable.value.toString());
             }
         } while (text !== prev);
 
         return text.replace("\\n", "\n");
     }
 
-    async runCommand(inputText, inline = false) {
+    async runCommand(inputText: string, inline = false) {
         this.commandRunning = true;
 
         const lines = inputText.replaceAll(";", "\n").split("\n").map(l => l.trim()).filter(Boolean);
@@ -216,6 +238,7 @@ export class Konsole {
             const replacedLine = await this.replaceVars(line);
             const args = replacedLine.split(" ");
             const alias = args.shift();
+            if(!alias) continue;
             const command = this.options.commands.find(cmd => cmd.alias.includes(alias));
 
             if (command) {
