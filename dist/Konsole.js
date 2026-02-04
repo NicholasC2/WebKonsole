@@ -381,7 +381,7 @@ ${cmd.longDesc}` : `<err>No such command: ${args[0]}</err>`;
           }
         } else {
           this.update(`
-Unknown command: ${alias}`);
+<err>Unknown command: "${alias}"</err>`);
         }
       }
       if (!inline) this.update("\n" + this.options.prefix);

@@ -278,7 +278,7 @@ export class Konsole {
                     this.update("\n"+await this.replaceVars(result));
                 }
             } else {
-                this.update(`\nUnknown command: ${alias}`);
+                this.update(`\n<err>Unknown command: "${alias}"</err>`);
             }
         }
         if(!inline) this.update("\n"+this.options.prefix);
