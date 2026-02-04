@@ -50,8 +50,8 @@ const konsole = new Konsole(container, {
 ## Colors
 
 Colors formatted like this:  
-`<c:#HEX>COLORED TEXT</c>`  
-will be replaced with the COLORED TEXT colored with the color defined in HEX.  
+`<c:COLOR>COLORED TEXT</c>`  
+will be replaced with the COLORED TEXT colored with the color defined in COLOR using standard css color tags.
 
 ## Scripts
 
