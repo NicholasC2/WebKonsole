@@ -7,14 +7,6 @@ class Command {
     }
 }
 
-const copyrightElem = document.createElement("div");
-copyrightElem.innerText = "Copyright © 2026 NicholasC";
-copyrightElem.style.right = "10px";
-copyrightElem.style.bottom = "10px";
-copyrightElem.style.position = "absolute";
-copyrightElem.style.color = "white";
-copyrightElem.style.opacity = "50%"
-
 const defaultStyle = {
     backgroundColor: "black",
     boxSizing: "border-box",
