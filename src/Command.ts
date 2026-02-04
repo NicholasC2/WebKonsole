@@ -144,8 +144,8 @@ export const defaultCommands = [
 
     new Command(
         ["run"],
-        "Runs a \".kjs\" script.",
-        "Usage: run <script location>\nRuns a \".kjs\" script.",
+        "Runs a \".ks\" script.",
+        "Usage: run <script location>\nRuns a \".ks\" script.",
         async function(this: Konsole, _, args) {
             try {
                 if(args.length < 1) return "<err>Usage: run <script location></err>";
