@@ -2,7 +2,7 @@
 
 # Konsole – Browser Console
 
-Konsole is a lightweight, extensible console, designed to fit perfectly into any project. It supports custom commands, custom scripts, and dynamic variable injection - all in a slick terminal UI, designed for scalablilty and ease-of-use.
+Konsole is a lightweight, extensible console, designed to fit perfectly into any project. It supports custom commands, custom scripts, and dynamic variable injection, all in a slick terminal UI, designed for scalablilty and ease-of-use.
 
 ## Live Demo
 
@@ -12,7 +12,6 @@ Try it here: https://nicholasc2.github.io/WebKonsole/
 
 ```js
 const container = document.getElementById("terminal");
-
 const konsole = new Konsole(container);
 ```
 
@@ -36,10 +35,6 @@ Variables wrapped in curly braces will be dynamically replaced, for example
 will be replaced with
 `echo stable`
 
-Colors formatted like this:
-`<c:#HEX>COLORED TEXT</c>`
-will be replaced with the COLORED TEXT colored with the color defined in HEX.
-
 Variables are defined like this:
 
 ```js
@@ -49,28 +44,18 @@ const konsole = new Konsole(container, {
     variables: {
         "hello": "world"
     }
-}};
-```
-
-## Styling
-
-You can override default styles:
-
-```js
-const container = document.getElementById("terminal");
-
-const konsole = new Konsole(container, {}, {
-    "color": "lime",
-    "background-color": "black",
-    "font-family": "monospace",
-    "padding": "5px"
 });
 ```
 
+## Colors
+
+Colors formatted like
+`<c:COLOR>COLORED TEXT</c>`
+will be replaced with the COLORED TEXT colored with the color defined in COLOR using standard css color tags.
+
 ## Scripts
 
-scripts are run the same way commands are run.
-all scripts must be accessable via a fetch request, and must be on the same origin
+Scripts are run the same way commands are run. All scripts must be accessable via a fetch request, and must be on the same origin
 
 ## Credits
 
