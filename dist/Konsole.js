@@ -23,7 +23,7 @@
 ###    ### ########  ###    ####  ########   ########  ########## ########## `),
     // https://patorjk.com/software/taag/#p=display&f=Alligator2&t=Konsole
     new Variable("ascii_gen", "https://patorjk.com/software/taag/"),
-    new Variable("branch", "experimental-ts")
+    new Variable("branch", "stable")
   ];
 
   // src/Command.ts

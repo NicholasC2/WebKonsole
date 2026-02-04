@@ -8,7 +8,7 @@ export class Variable {
 }
 
 export const defaultVariables = [
-    new Variable("version", "1.4.7"),
+    new Variable("version", "1.0.0"),
     new Variable("version_ascii", `\
 :::    ::: ::::::::  ::::    :::  ::::::::   ::::::::  :::        :::::::::: 
 :+:   :+: :+:    :+: :+:+:   :+: :+:    :+: :+:    :+: :+:        :+:        
@@ -18,5 +18,5 @@ export const defaultVariables = [
 #+#   #+# #+#    #+# #+#   #+#+# #+#    #+# #+#    #+# #+#        #+#        
 ###    ### ########  ###    ####  ########   ########  ########## ########## `), // https://patorjk.com/software/taag/#p=display&f=Alligator2&t=Konsole
     new Variable("ascii_gen", "https://patorjk.com/software/taag/"),
-    new Variable("branch", "stable-ts")
+    new Variable("branch", "stable")
 ]
