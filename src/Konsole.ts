@@ -262,6 +262,8 @@ export class Konsole {
 
     async runCommand(inputText: string = "", inline = false) {
         this.commandRunning = true;
+        this.cursor.visible = false;
+        this.update();
 
         const lines = inputText.replaceAll(";", "\n").split("\n").map(l => l.trim()).filter(Boolean);
 

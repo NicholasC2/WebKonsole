@@ -367,6 +367,8 @@ ${cmd.longDesc}` : `<err>No such command: ${args[0]}</err>`;
     }
     async runCommand(inputText = "", inline = false) {
       this.commandRunning = true;
+      this.cursor.visible = false;
+      this.update();
       const lines = inputText.replaceAll(";", "\n").split("\n").map((l) => l.trim()).filter(Boolean);
       for (const line of lines) {
         const replacedLine = await this.replaceVars(line);
