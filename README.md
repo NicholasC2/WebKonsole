@@ -12,7 +12,6 @@ Try it here: https://nicholasc2.github.io/WebKonsole/
 
 ```js
 const container = document.getElementById("terminal");
-
 const konsole = new Konsole(container);
 ```
 
@@ -50,14 +49,13 @@ const konsole = new Konsole(container, {
 
 ## Colors
 
-Colors formatted like this:
-`<c:#HEX>COLORED TEXT</c>`
-will be replaced with the COLORED TEXT colored with the color defined in HEX.
+Colors formatted like this:  
+`<c:#HEX>COLORED TEXT</c>`  
+will be replaced with the COLORED TEXT colored with the color defined in HEX.  
 
 ## Scripts
 
-scripts are run the same way commands are run.
-all scripts must be accessable via a fetch request, and must be on the same origin
+Scripts are run the same way commands are run. All scripts must be accessable via a fetch request, and must be on the same origin
 
 ## Credits
 
