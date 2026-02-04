@@ -1,0 +1,10 @@
+{
+  "devDependencies": {
+    "esbuild": "^0.27.2",
+    "typescript": "^5.9.3"
+  },
+  "scripts": {
+    "build": "esbuild src/index.ts --bundle --target=es2018 --format=iife --global-name=Konsole --outfile=dist/Konsole.js",
+    "build:min": "esbuild src/index.ts --bundle --minify --target=es2018 --format=iife --global-name=Konsole --outfile=dist/Konsole.min.js"
+  }
+}
