@@ -1,3 +1,6 @@
+import { Konsole } from "./Konsole";
+import { Variable } from "./Variable";
+
 export type CommandRun = (
     alias: string,
     args: string[]
@@ -37,7 +40,7 @@ export const defaultCommands = [
         ["clear", "cls"],
         "Clears the terminal screen.",
         "Usage: clear\nResets the console display and clears all previous output.",
-        async function () {
+        async function (this: Konsole) {
             this.container.innerHTML = "";
         }
     ),
@@ -57,7 +60,7 @@ export const defaultCommands = [
         ["help", "?"], 
         "Lists available commands.",
         "Usage: help [command]\nWithout arguments, lists all available commands.\nUse `help <command>` for detailed info.",
-        async function (_, args) {
+        async function (this: Konsole, _, args) {
             if (args.length > 0) {
                 const cmd = this.options.commands.find(c => c.alias.includes(args[0]));
                 return cmd ? `${cmd.alias.join(" | ")}\n${cmd.longDesc}` : `<err>No such command: ${args[0]}</err>`;
@@ -99,12 +102,12 @@ export const defaultCommands = [
         ["vars", "variables"],
         "Lists all variables.",
         "Usage: vars\nLists all available variables that can be used with curly braces (e.g., {version}).",
-        async function () {
-            const vars = Object.entries(this.options.variables);
+        async function (this: Konsole) {
+            const vars = this.options.variables;
             if (vars.length === 0) return "<err>No variables defined.</err>";
             
             return "Available Variables:\n" +
-                vars.map(([k, v]) => `  ${k} = ${typeof v === "string" && v.includes("\n") ? `[${v.split("\n")[0]}...]` : v}`).join("\n");
+                vars.map((v) => `  ${v.key} = ${v.value.includes("\n") ? `[${v.value.split("\n")[0]}...]` : v.value}`).join("\n");
         }
     ),
 
@@ -125,11 +128,16 @@ export const defaultCommands = [
         ["set", "setvar"],
         "Sets a variable for use in commands.",
         "Usage: set <variable> <value>\nSets a variable that can be used in commands with curly braces (e.g., {variable}).",
-        async function (_, args) {
+        async function (this: Konsole, _, args) {
             if (args.length < 2) return "<err>Usage: set <variable> <value></err>";
             const [key, ...valueParts] = args;
             const value = valueParts.join(" ");
-            this.options.variables[key] = value;
+            const variable = this.options.variables.find(v => v.key === key);
+            if (variable) {
+                variable.value = value;
+            } else {
+                this.options.variables.push(new Variable(key, value));
+            }
             return `Variable ${key} set to "${value}"`;
         }
     ),
@@ -138,15 +146,18 @@ export const defaultCommands = [
         ["run"],
         "Runs a \".kjs\" script.",
         "Usage: run <script location>\nRuns a \".kjs\" script.",
-        async function(_, args) {
+        async function(this: Konsole, _, args) {
             try {
                 if(args.length < 1) return "<err>Usage: run <script location></err>";
                 const result = await fetch(args[0])
                 if(!result.ok) return "<err>Inaccessible script location</err>";
                 const script = await result.text()
                 return await this.runCommand(script, true);
-            } catch(err) {
-                return `<err>Failed to fetch script: ${err.message}</err>`
+            } catch(err: unknown) {
+                if (err instanceof Error) {
+                    return `<err>Failed to fetch script: ${err.message}</err>`;
+                }
+                return `<err>Failed to fetch script: ${String(err)}</err>`;
             }
         }
     )

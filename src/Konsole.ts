@@ -14,26 +14,34 @@ const defaultStyle = {
     "height": "100%"
 }
 
+type KonsoleOptionsInit = {
+    initCommand?: string;
+    prefix?: string;
+    cursor?: string;
+    variables?: Record<string, string>;
+    commands?: Command[];
+};
+
 export class KonsoleOptions {
     initCommand: string
-    prefix: string = "$ "
-    cursor: string = "_"
-    style: Object
+    prefix: string
+    cursor: string
     variables: Variable[]
     commands: Command[]
 
-    constructor(initCommand: string = "echo {version_ascii}\n echo v{version}-{branch}\n echo https://github.com/NicholasC2/WebKonsole", prefix: string = "$ ", cursor: string = "_", style: Object = [], variables: Variable[] = [], commands: Command[] = []) {
-        this.initCommand = initCommand
-        this.prefix = prefix;
-        this.cursor = cursor;
-        this.style = style;
+    constructor({ initCommand, prefix, cursor, variables, commands }: KonsoleOptionsInit = {}) {
+        this.initCommand = initCommand ?? "echo {version_ascii}\n echo v{version}-{branch}\n echo https://github.com/NicholasC2/WebKonsole";
+        this.prefix = prefix ?? "$ ";
+        this.cursor = cursor ?? "_";
         this.variables = [
             ...defaultVariables,
-            ...variables
+            ...Object.entries(variables ?? {}).map(
+                ([key, value]) => new Variable(key, value)
+            )
         ]
         this.commands = [
             ...defaultCommands,
-            ...commands
+            ...commands ?? []
         ]
     }
 }
@@ -58,10 +66,15 @@ export class Konsole {
     commandRunning: boolean = false;
     options: KonsoleOptions;
 
-    constructor(container: HTMLElement, options: KonsoleOptions) {
+    constructor(container: HTMLElement, options: KonsoleOptionsInit) {
         this.container = container;
-        this.options = Object.assign(new KonsoleOptions(), options);
-        Object.assign(this.container.style, defaultStyle, this.options.style)
+        this.options = new KonsoleOptions(options);
+
+        for (const [key, value] of Object.entries(defaultStyle)) {
+            if (!this.container.style.getPropertyValue(key)) {
+                this.container.style.setProperty(key, value);
+            }
+        }
 
         this.cursor = {
             element: document.createElement("div"),
@@ -240,7 +253,7 @@ export class Konsole {
         do {
             prev = text;
             for (const variable of this.options.variables) {
-                text = text.replace(`{${variable.key}}`, variable.value.toString());
+                text = text.replace(`{${variable.key}}`, variable.value);
             }
         } while (text !== prev);
 

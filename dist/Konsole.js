@@ -13,7 +13,7 @@
     }
   };
   var defaultVariables = [
-    new Variable("version", "1.4.6"),
+    new Variable("version", "1.4.7"),
     new Variable("version_ascii", `:::    ::: ::::::::  ::::    :::  ::::::::   ::::::::  :::        :::::::::: 
 :+:   :+: :+:    :+: :+:+:   :+: :+:    :+: :+:    :+: :+:        :+:        
 +:+  +:+  +:+    +:+ :+:+:+  +:+ +:+        +:+    +:+ +:+        +:+        
@@ -21,13 +21,14 @@
 +#+  +#+  +#+    +#+ +#+  +#+#+#        +#+ +#+    +#+ +#+        +#+        
 #+#   #+# #+#    #+# #+#   #+#+# #+#    #+# #+#    #+# #+#        #+#        
 ###    ### ########  ###    ####  ########   ########  ########## ########## `),
+    // https://patorjk.com/software/taag/#p=display&f=Alligator2&t=Konsole
     new Variable("ascii_gen", "https://patorjk.com/software/taag/"),
     new Variable("branch", "experimental-ts")
   ];
 
   // src/Command.ts
   var Command = class {
-    constructor(alias = [], shortDesc = "", longDesc = "", run = async () => "This command is missing the run function") {
+    constructor(alias = [], shortDesc = "", longDesc = "", run = async () => "This command is missing the run function.") {
       __publicField(this, "alias");
       __publicField(this, "shortDesc");
       __publicField(this, "longDesc");
@@ -106,12 +107,12 @@ ${cmd.longDesc}` : `<err>No such command: ${args[0]}</err>`;
     ),
     new Command(
       ["vars", "variables"],
-      "Lists all variables. ",
+      "Lists all variables.",
       "Usage: vars\nLists all available variables that can be used with curly braces (e.g., {version}).",
       async function() {
-        const vars = Object.entries(this.options.variables);
+        const vars = this.options.variables;
         if (vars.length === 0) return "<err>No variables defined.</err>";
-        return "Available Variables:\n" + vars.map(([k, v]) => `  ${k} = ${typeof v === "string" && v.includes("\n") ? `[${v.split("\n")[0]}...]` : v}`).join("\n");
+        return "Available Variables:\n" + vars.map((v) => `  ${v.key} = ${v.value.includes("\n") ? `[${v.value.split("\n")[0]}...]` : v.value}`).join("\n");
       }
     ),
     new Command(
@@ -134,13 +135,18 @@ ${cmd.longDesc}` : `<err>No such command: ${args[0]}</err>`;
         if (args.length < 2) return "<err>Usage: set <variable> <value></err>";
         const [key, ...valueParts] = args;
         const value = valueParts.join(" ");
-        this.options.variables[key] = value;
+        const variable = this.options.variables.find((v) => v.key === key);
+        if (variable) {
+          variable.value = value;
+        } else {
+          this.options.variables.push(new Variable(key, value));
+        }
         return `Variable ${key} set to "${value}"`;
       }
     ),
     new Command(
       ["run"],
-      'Runs a ".kjs" script',
+      'Runs a ".kjs" script.',
       'Usage: run <script location>\nRuns a ".kjs" script.',
       async function(_, args) {
         try {
@@ -150,7 +156,10 @@ ${cmd.longDesc}` : `<err>No such command: ${args[0]}</err>`;
           const script = await result.text();
           return await this.runCommand(script, true);
         } catch (err) {
-          return `<err>Failed to fetch script: ${err.message}</err>`;
+          if (err instanceof Error) {
+            return `<err>Failed to fetch script: ${err.message}</err>`;
+          }
+          return `<err>Failed to fetch script: ${String(err)}</err>`;
         }
       }
     )
@@ -170,24 +179,24 @@ ${cmd.longDesc}` : `<err>No such command: ${args[0]}</err>`;
     "height": "100%"
   };
   var KonsoleOptions = class {
-    constructor(initCommand = "echo {version_ascii}\n echo v{version}-{branch}\n echo https://github.com/NicholasC2/WebKonsole", prefix = "$ ", cursor = "_", style = [], variables = [], commands = []) {
+    constructor({ initCommand, prefix, cursor, variables, commands } = {}) {
       __publicField(this, "initCommand");
-      __publicField(this, "prefix", "$ ");
-      __publicField(this, "cursor", "_");
-      __publicField(this, "style");
+      __publicField(this, "prefix");
+      __publicField(this, "cursor");
       __publicField(this, "variables");
       __publicField(this, "commands");
-      this.initCommand = initCommand;
-      this.prefix = prefix;
-      this.cursor = cursor;
-      this.style = style;
+      this.initCommand = initCommand != null ? initCommand : "echo {version_ascii}\n echo v{version}-{branch}\n echo https://github.com/NicholasC2/WebKonsole";
+      this.prefix = prefix != null ? prefix : "$ ";
+      this.cursor = cursor != null ? cursor : "_";
       this.variables = [
         ...defaultVariables,
-        ...variables
+        ...Object.entries(variables != null ? variables : {}).map(
+          ([key, value]) => new Variable(key, value)
+        )
       ];
       this.commands = [
         ...defaultCommands,
-        ...commands
+        ...commands != null ? commands : []
       ];
     }
   };
@@ -201,8 +210,12 @@ ${cmd.longDesc}` : `<err>No such command: ${args[0]}</err>`;
       __publicField(this, "commandRunning", false);
       __publicField(this, "options");
       this.container = container;
-      this.options = Object.assign(new KonsoleOptions(), options);
-      Object.assign(this.container.style, defaultStyle, this.options.style);
+      this.options = new KonsoleOptions(options);
+      for (const [key, value] of Object.entries(defaultStyle)) {
+        if (!this.container.style.getPropertyValue(key)) {
+          this.container.style.setProperty(key, value);
+        }
+      }
       this.cursor = {
         element: document.createElement("div"),
         blinkTime: 0,
@@ -347,7 +360,7 @@ ${cmd.longDesc}` : `<err>No such command: ${args[0]}</err>`;
       do {
         prev = text;
         for (const variable of this.options.variables) {
-          text = text.replace(`{${variable.key}}`, variable.value.toString());
+          text = text.replace(`{${variable.key}}`, variable.value);
         }
       } while (text !== prev);
       return text.replace("\\n", "\n");
