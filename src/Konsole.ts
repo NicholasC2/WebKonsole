@@ -1,25 +1,40 @@
 import { Variable, defaultVariables } from "./Variable";
 import { Command, defaultCommands } from "./Command";
 
+const defaultStyle = {
+    "background-color": "black",
+    "box-sizing": "border-box",
+    "color": "lime",
+    "cursor": "text",
+    "font-family": "monospace",
+    "overflow": "auto",
+    "padding": "5px",
+    "white-space": "pre",
+    "width": "100%",
+    "height": "100%"
+}
+
 export class KonsoleOptions {
     initCommand: string
-    prefix: string
+    prefix: string = "$ "
+    cursor: string = "_"
+    style: Object
     variables: Variable[]
     commands: Command[]
-    cursor: {
-        blinkTime: number;
-        character: string;
-    }
 
-    constructor(initCommand: string, prefix = "$ ", cursor = "_", cursorBlinkTime = 1, variables = defaultVariables, commands = defaultCommands) {
+    constructor(initCommand: string = "echo {version_ascii}\n echo v{version}-{branch}\n echo https://github.com/NicholasC2/WebKonsole", prefix: string = "$ ", cursor: string = "_", style: Object = [], variables: Variable[] = [], commands: Command[] = []) {
         this.initCommand = initCommand
-        this.prefix = prefix
-        this.cursor = {
-            blinkTime: cursorBlinkTime,
-            character: cursor
-        }
-        this.variables = variables
-        this.commands = commands
+        this.prefix = prefix;
+        this.cursor = cursor;
+        this.style = style;
+        this.variables = [
+            ...defaultVariables,
+            ...variables
+        ]
+        this.commands = [
+            ...defaultCommands,
+            ...commands
+        ]
     }
 }
 
@@ -45,11 +60,12 @@ export class Konsole {
 
     constructor(container: HTMLElement, options: KonsoleOptions) {
         this.container = container;
-        this.options = options;
+        this.options = Object.assign(new KonsoleOptions(), options);
+        Object.assign(this.container.style, defaultStyle, this.options.style)
 
         this.cursor = {
-            blinkTime: options.cursor.blinkTime,
             element: document.createElement("div"),
+            blinkTime: 0,
             visible: false
         }
 
@@ -64,7 +80,9 @@ export class Konsole {
             entries: []
         }
 
+        this.input.element.style.display = "inline";
         this.container.appendChild(this.input.element);
+        this.cursor.element.style.userSelect = "none";
         this.container.appendChild(this.cursor.element);
 
         this.setupInputHandler();
@@ -213,7 +231,7 @@ export class Konsole {
             }
         }
 
-        this.cursor.element.innerText = this.options.cursor.character
+        this.cursor.element.innerText = this.options.cursor
         this.container.appendChild(this.cursor.element)
     }
 
@@ -229,7 +247,7 @@ export class Konsole {
         return text.replace("\\n", "\n");
     }
 
-    async runCommand(inputText: string, inline = false) {
+    async runCommand(inputText: string = "", inline = false) {
         this.commandRunning = true;
 
         const lines = inputText.replaceAll(";", "\n").split("\n").map(l => l.trim()).filter(Boolean);
@@ -254,4 +272,3 @@ export class Konsole {
         this.commandRunning = false;
     }
 }
-

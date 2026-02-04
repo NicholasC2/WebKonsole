@@ -1,1 +1,3 @@
-export import { Konsole } from "./Konsole"
+import { Konsole } from "./Konsole";
+
+(globalThis as any).Konsole = Konsole;
