@@ -2,7 +2,7 @@
 
 # Konsole – Browser Console
 
-Konsole is a lightweight, extensible console, designed to fit perfectly into any project. It supports custom commands, custom scripts, and dynamic variable injection - all in a slick terminal UI, designed for scalablilty and ease-of-use.
+Konsole is a lightweight, extensible console, designed to fit perfectly into any project. It supports custom commands, custom scripts, and dynamic variable injection, all in a slick terminal UI, designed for scalablilty and ease-of-use.
 
 ## Live Demo
 
@@ -49,24 +49,7 @@ const konsole = new Konsole(container, {
     variables: {
         "hello": "world"
     }
-}};
-```
-
-## Styling
-
-You can override default styles:
-
-```js
-const container = document.getElementById("terminal");
-
-const konsole = new Konsole(container, {
-    style: {
-        "color": "lime",
-        "background-color": "black",
-        "font-family": "monospace",
-        "padding": "5px"
-    }
-}};
+});
 ```
 
 ## Scripts
