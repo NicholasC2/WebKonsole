@@ -13,7 +13,7 @@
     }
   };
   var defaultVariables = [
-    new Variable("version", "1.4.7"),
+    new Variable("version", "1.0.0"),
     new Variable("version_ascii", `:::    ::: ::::::::  ::::    :::  ::::::::   ::::::::  :::        :::::::::: 
 :+:   :+: :+:    :+: :+:+:   :+: :+:    :+: :+:    :+: :+:        :+:        
 +:+  +:+  +:+    +:+ :+:+:+  +:+ +:+        +:+    +:+ +:+        +:+        
