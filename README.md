@@ -26,7 +26,7 @@ const konsole = new Konsole(container);
 `vars` - Lists all variables.  
 `about` - Displays Konsole info.  
 `set` - Sets a variable for use in commands.  
-`run` - Runs a ".ks" script.  
+`run` - Runs a ".js" script.  
 
 ## Variable Replacement
 
