@@ -1,4 +1,4 @@
-![Recording 2025-07-26 204158](https://github.com/user-attachments/assets/6f5cefc1-ab97-4e89-8969-11edd19b4c7e)
+![ezgif-36570c961dfe7213](https://github.com/user-attachments/assets/0389116b-ecae-41d6-8682-f0110a12b551)
 
 # Konsole – Browser Console
 
