@@ -17,16 +17,16 @@ const konsole = new Konsole(container);
 
 ## Built-in Commands
 
-`echo` or `print` - Prints text to the console.  
-`clear` or `cls` - Clears the terminal screen.  
-`wait` or `delay` - Waits for a given number of milliseconds.  
-`help` or `?` - Lists available commands.  
-`version` or `ver` - Displays version info.  
-`nl` or `newline` or `br` - Prints a blank line.  
-`vars` or `variables` - Lists all variables.  
+`echo`  - Prints text to the console.  
+`clear` - Clears the terminal screen.  
+`wait`  - Waits for a given number of milliseconds.  
+`help`  - Lists available commands.  
+`ver`   - Displays version info.  
+`nl`    - Prints a blank line.  
+`vars`  - Lists all variables.  
 `about` - Displays Konsole info.  
-`set` or `setvar` - Sets a variable for use in commands.  
-`run` - Runs a ".ks" script.  
+`set`   - Sets a variable for use in commands.  
+`run`   - Runs a ".ks" script.  
 
 ## Variable Replacement
 
@@ -55,7 +55,7 @@ will be replaced with the COLORED TEXT colored with the color defined in COLOR u
 
 ## Scripts
 
-Scripts are run the same way commands are run. All scripts must be accessable via a fetch request, and must be on the same origin
+An example script can be found in `scripts/`
 
 ## Credits
 
