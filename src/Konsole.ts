@@ -1,4 +1,4 @@
-import { createCommand, getCommands } from "./Command";
+import { createCommand, deleteCommand, getCommands, registerDefaultCommands } from "./Command";
 
 export const defaultVariables = {
     "version": "1.0.0",
@@ -31,9 +31,9 @@ export class KonsoleOptions {
     initCommand: string
     prefix: string
     cursor: string
-    variables: Object
+    variables: Record<string, string>
 
-    constructor({ initCommand, prefix, cursor, variables }: KonsoleOptions) {
+    constructor({ initCommand, prefix, cursor, variables }: Partial<KonsoleOptions> = {}) {
         this.initCommand = initCommand ?? "echo {version_ascii}\n echo v{version}-{branch}\n echo https://github.com/NicholasC2/WebKonsole";
         this.prefix = prefix ?? "$ ";
         this.cursor = cursor ?? "_";
@@ -60,6 +60,8 @@ export class Konsole {
     };
     commandRunning: boolean = false;
     options: KonsoleOptions;
+    createCommand = createCommand;
+    deleteCommand = deleteCommand;
 
     constructor(container: HTMLElement, options: KonsoleOptions) {
         this.container = container;
@@ -70,6 +72,8 @@ export class Konsole {
                 this.container.style.setProperty(key, value);
             }
         }
+
+        registerDefaultCommands();
 
         this.cursor = {
             element: document.createElement("div"),
@@ -267,7 +271,7 @@ export class Konsole {
             const args = replacedLine.split(" ");
             const alias = args.shift();
             if(!alias) continue;
-            const command = getCommands().find(cmd => cmd.alias.includes(alias));
+            const command = getCommands().find(cmd => cmd.alias == alias);
 
             if (command) {
                 const result = await command.run.call(this, alias, args);

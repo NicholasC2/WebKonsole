@@ -3,32 +3,9 @@
   var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
   var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
 
-  // src/Variable.ts
-  var Variable = class {
-    constructor(key, value) {
-      __publicField(this, "key");
-      __publicField(this, "value");
-      this.key = key;
-      this.value = value;
-    }
-  };
-  var defaultVariables = [
-    new Variable("version", "1.0.0"),
-    new Variable("version_ascii", `:::    ::: ::::::::  ::::    :::  ::::::::   ::::::::  :::        :::::::::: 
-:+:   :+: :+:    :+: :+:+:   :+: :+:    :+: :+:    :+: :+:        :+:        
-+:+  +:+  +:+    +:+ :+:+:+  +:+ +:+        +:+    +:+ +:+        +:+        
-+#++:++   +#+    +:+ +#+ +:+ +#+ +#++:++#++ +#+    +:+ +#+        +#++:++#   
-+#+  +#+  +#+    +#+ +#+  +#+#+#        +#+ +#+    +#+ +#+        +#+        
-#+#   #+# #+#    #+# #+#   #+#+# #+#    #+# #+#    #+# #+#        #+#        
-###    ### ########  ###    ####  ########   ########  ########## ########## `),
-    // https://patorjk.com/software/taag/#p=display&f=Alligator2&t=Konsole
-    new Variable("ascii_gen", "https://patorjk.com/software/taag/"),
-    new Variable("branch", "stable")
-  ];
-
   // src/Command.ts
   var Command = class {
-    constructor(alias = [], shortDesc = "", longDesc = "", run = async () => "This command is missing the run function.") {
+    constructor(alias, shortDesc = "", longDesc = "", run = async () => "Command is missing a run function.") {
       __publicField(this, "alias");
       __publicField(this, "shortDesc");
       __publicField(this, "longDesc");
@@ -39,26 +16,49 @@
       this.run = run;
     }
   };
-  var defaultCommands = [
-    new Command(
-      ["echo", "print"],
+  var commands = [];
+  function getCommands() {
+    return [...commands];
+  }
+  function createCommand(alias, shortDesc, longDesc, run) {
+    if (!alias || alias.trim() == "") {
+      throw new SyntaxError("Command must have alias");
+    }
+    if (alias.includes(" ")) {
+      throw new SyntaxError("Command alias cannot contain spaces");
+    }
+    const exists = commands.some((c) => c.alias === alias);
+    if (exists) {
+      throw new Error(`Command ${alias} already exists`);
+    }
+    commands.push(new Command(alias, shortDesc, longDesc, run));
+  }
+  function deleteCommand(alias) {
+    const index = commands.findIndex((c) => c.alias === alias);
+    if (index !== -1) {
+      commands.splice(index, 1);
+    }
+  }
+  function registerDefaultCommands() {
+    createCommand(
+      "echo",
       "Prints text to the console.",
       "Usage: echo <text>\nPrints the provided text back to the screen.",
       async function(_, args) {
         if (args.length === 0) return "<err>Usage: echo <text></err>";
         return args.join(" ");
       }
-    ),
-    new Command(
-      ["clear", "cls"],
+    );
+    createCommand(
+      "clear",
       "Clears the terminal screen.",
       "Usage: clear\nResets the console display and clears all previous output.",
       async function() {
         this.container.innerHTML = "";
       }
-    ),
-    new Command(
-      ["wait", "delay"],
+    );
+    createCommand(
+      "wait",
       "Waits for a given number of milliseconds.",
       "Usage: wait <ms>\nPauses the terminal for a specific number of milliseconds. Useful for scripting delays.",
       async function(_, args) {
@@ -66,26 +66,27 @@
         if (isNaN(time) || time < 0) return "<err>Usage: wait <milliseconds></err>";
         await new Promise((res) => setTimeout(res, time));
       }
-    ),
-    new Command(
-      ["help", "?"],
+    );
+    createCommand(
+      "help",
       "Lists available commands.",
       "Usage: help [command]\nWithout arguments, lists all available commands.\nUse `help <command>` for detailed info.",
       async function(_, args) {
         if (args.length > 0) {
-          const cmd = this.options.commands.find((c) => c.alias.includes(args[0]));
-          return cmd ? `${cmd.alias.join(" | ")}
+          const commands2 = getCommands();
+          const cmd = commands2.find((c) => c.alias == args[0]);
+          return cmd ? `${cmd.alias}
 ${cmd.longDesc}` : `<err>No such command: ${args[0]}</err>`;
         }
-        const lines = this.options.commands.map((cmd) => {
-          const aliases = cmd.alias.join(" | ");
+        const lines = commands.map((cmd) => {
+          const aliases = cmd.alias;
           return `  ${aliases.padEnd(20)} - ${cmd.shortDesc}`;
         });
         return "Available Commands:\n" + lines.join("\n");
       }
-    ),
-    new Command(
-      ["version", "ver"],
+    );
+    createCommand(
+      "version",
       "Displays version info.",
       "Usage: version\nShows current version, branch, and developer information.",
       async function() {
@@ -96,27 +97,27 @@ ${cmd.longDesc}` : `<err>No such command: ${args[0]}</err>`;
           `  Dev     : NicholasC`
         ].join("\n");
       }
-    ),
-    new Command(
-      ["nl", "newline", "br"],
+    );
+    createCommand(
+      "nl",
       "Prints a blank line.",
       "Usage: nl\nInserts a newline into the output.",
       async function() {
         return "\n";
       }
-    ),
-    new Command(
-      ["vars", "variables"],
+    );
+    createCommand(
+      "vars",
       "Lists all variables.",
       "Usage: vars\nLists all available variables that can be used with curly braces (e.g., {version}).",
       async function() {
-        const vars = this.options.variables;
+        const vars = Object.entries(this.options.variables);
         if (vars.length === 0) return "<err>No variables defined.</err>";
-        return "Available Variables:\n" + vars.map((v) => `  ${v.key} = ${v.value.includes("\n") ? `[${v.value.split("\n")[0]}...]` : v.value}`).join("\n");
+        return "Available Variables:\n" + vars.map(([key, value]) => `  ${key} = ${value.includes("\n") ? `[${value.split("\n")[0]}...]` : value}`).join("\n");
       }
-    ),
-    new Command(
-      ["about"],
+    );
+    createCommand(
+      "about",
       "Displays Konsole info.",
       "Usage: about\nShows Konsole's developer and ASCII art source.",
       async function() {
@@ -126,26 +127,21 @@ ${cmd.longDesc}` : `<err>No such command: ${args[0]}</err>`;
           "  ASCII Art Source: {ascii_gen}"
         ].join("\n");
       }
-    ),
-    new Command(
-      ["set", "setvar"],
+    );
+    createCommand(
+      "set",
       "Sets a variable for use in commands.",
       "Usage: set <variable> <value>\nSets a variable that can be used in commands with curly braces (e.g., {variable}).",
       async function(_, args) {
         if (args.length < 2) return "<err>Usage: set <variable> <value></err>";
         const [key, ...valueParts] = args;
         const value = valueParts.join(" ");
-        const variable = this.options.variables.find((v) => v.key === key);
-        if (variable) {
-          variable.value = value;
-        } else {
-          this.options.variables.push(new Variable(key, value));
-        }
+        this.options.variables[key] = value;
         return `Variable ${key} set to "${value}"`;
       }
-    ),
-    new Command(
-      ["run"],
+    );
+    createCommand(
+      "run",
       'Runs a ".ks" script.',
       'Usage: run <script location>\nRuns a ".ks" script.',
       async function(_, args) {
@@ -162,10 +158,23 @@ ${cmd.longDesc}` : `<err>No such command: ${args[0]}</err>`;
           return `<err>Failed to fetch script: ${String(err)}</err>`;
         }
       }
-    )
-  ];
+    );
+  }
 
   // src/Konsole.ts
+  var defaultVariables = {
+    "version": "1.0.0",
+    "version_ascii": `:::    ::: ::::::::  ::::    :::  ::::::::   ::::::::  :::        :::::::::: 
+:+:   :+: :+:    :+: :+:+:   :+: :+:    :+: :+:    :+: :+:        :+:        
++:+  +:+  +:+    +:+ :+:+:+  +:+ +:+        +:+    +:+ +:+        +:+        
++#++:++   +#+    +:+ +#+ +:+ +#+ +#++:++#++ +#+    +:+ +#+        +#++:++#   
++#+  +#+  +#+    +#+ +#+  +#+#+#        +#+ +#+    +#+ +#+        +#+        
+#+#   #+# #+#    #+# #+#   #+#+# #+#    #+# #+#    #+# #+#        #+#        
+###    ### ########  ###    ####  ########   ########  ########## ########## `,
+    // https://patorjk.com/software/taag/#p=display&f=Alligator2&t=Konsole
+    "ascii_gen": "https://patorjk.com/software/taag/",
+    "branch": "stable"
+  };
   var defaultStyle = {
     "background-color": "black",
     "box-sizing": "border-box",
@@ -179,25 +188,15 @@ ${cmd.longDesc}` : `<err>No such command: ${args[0]}</err>`;
     "height": "100%"
   };
   var KonsoleOptions = class {
-    constructor({ initCommand, prefix, cursor, variables, commands } = {}) {
+    constructor({ initCommand, prefix, cursor, variables } = {}) {
       __publicField(this, "initCommand");
       __publicField(this, "prefix");
       __publicField(this, "cursor");
       __publicField(this, "variables");
-      __publicField(this, "commands");
       this.initCommand = initCommand != null ? initCommand : "echo {version_ascii}\n echo v{version}-{branch}\n echo https://github.com/NicholasC2/WebKonsole";
       this.prefix = prefix != null ? prefix : "$ ";
       this.cursor = cursor != null ? cursor : "_";
-      this.variables = [
-        ...defaultVariables,
-        ...Object.entries(variables != null ? variables : {}).map(
-          ([key, value]) => new Variable(key, value)
-        )
-      ];
-      this.commands = [
-        ...defaultCommands,
-        ...commands != null ? commands : []
-      ];
+      this.variables = Object.assign(defaultVariables, variables);
     }
   };
   var Konsole = class {
@@ -209,6 +208,8 @@ ${cmd.longDesc}` : `<err>No such command: ${args[0]}</err>`;
       __publicField(this, "history");
       __publicField(this, "commandRunning", false);
       __publicField(this, "options");
+      __publicField(this, "createCommand", createCommand);
+      __publicField(this, "deleteCommand", deleteCommand);
       this.container = container;
       this.options = new KonsoleOptions(options);
       for (const [key, value] of Object.entries(defaultStyle)) {
@@ -216,6 +217,7 @@ ${cmd.longDesc}` : `<err>No such command: ${args[0]}</err>`;
           this.container.style.setProperty(key, value);
         }
       }
+      registerDefaultCommands();
       this.cursor = {
         element: document.createElement("div"),
         blinkTime: 0,
@@ -359,8 +361,8 @@ ${cmd.longDesc}` : `<err>No such command: ${args[0]}</err>`;
       let prev = "";
       do {
         prev = text;
-        for (const variable of this.options.variables) {
-          text = text.replace(`{${variable.key}}`, variable.value);
+        for (const [key, value] of Object.entries(this.options.variables)) {
+          text = text.replace(`{${key}}`, value);
         }
       } while (text !== prev);
       return text.replace("\\n", "\n");
@@ -375,7 +377,7 @@ ${cmd.longDesc}` : `<err>No such command: ${args[0]}</err>`;
         const args = replacedLine.split(" ");
         const alias = args.shift();
         if (!alias) continue;
-        const command = this.options.commands.find((cmd) => cmd.alias.includes(alias));
+        const command = getCommands().find((cmd) => cmd.alias == alias);
         if (command) {
           const result = await command.run.call(this, alias, args);
           if (result) {
