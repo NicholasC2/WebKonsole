@@ -1,7 +1,7 @@
 import { createCommand, deleteCommand, getCommands, registerDefaultCommands } from "./Command";
 
 export const defaultVariables = {
-    "version": "1.0.0",
+    "version": "1.0.01",
     "version_ascii": `\
 :::    ::: ::::::::  ::::    :::  ::::::::   ::::::::  :::        :::::::::: 
 :+:   :+: :+:    :+: :+:+:   :+: :+:    :+: :+:    :+: :+:        :+:        
@@ -20,11 +20,11 @@ const defaultStyle = {
     "color": "lime",
     "cursor": "text",
     "font-family": "monospace",
-    "overflow": "auto",
+    "white-space": "pre-wrap",
+    "overflow-wrap": "break-word",
     "padding": "5px",
-    "white-space": "pre",
     "width": "100%",
-    "height": "100%"
+    "height": "100%",
 }
 
 export class KonsoleOptions {
@@ -62,6 +62,7 @@ export class Konsole {
     options: KonsoleOptions;
     createCommand = createCommand;
     deleteCommand = deleteCommand;
+    getCommands = getCommands;
 
     constructor(container: HTMLElement, options: KonsoleOptions) {
         this.container = container;
@@ -221,9 +222,12 @@ export class Konsole {
     }
 
     update(...args: string[]) {
+        let elems: HTMLElement[] = [];
+
         args.forEach((text)=>{
             const newElem = document.createElement("span");
             newElem.innerHTML = this.formatOutput(text);
+            elems.push(newElem);
             this.container.appendChild(newElem);
         })
 
@@ -245,6 +249,8 @@ export class Konsole {
 
         this.cursor.element.innerText = this.options.cursor
         this.container.appendChild(this.cursor.element)
+
+        return elems;
     }
 
     async replaceVars(text = "") {
@@ -272,17 +278,20 @@ export class Konsole {
             const alias = args.shift();
             if(!alias) continue;
             const command = getCommands().find(cmd => cmd.alias == alias);
+            if(this.container.innerText != "") this.update("\n");
 
             if (command) {
-                const result = await command.run.call(this, alias, args);
+                const result = await command.run.call(this, args);
                 if (result) {
-                    this.update("\n"+await this.replaceVars(result));
+                    this.update(await this.replaceVars(result));
                 }
             } else {
-                this.update(`\n<err>Unknown command: "${alias}"</err>`);
+                this.update(`<err>Unknown command: "${alias}"</err>`);
             }
         }
-        if(!inline) this.update("\n"+this.options.prefix);
+
+        if(this.container.innerText != "") this.update("\n");
+        if(!inline) this.update(this.options.prefix);
         this.commandRunning = false;
     }
 }

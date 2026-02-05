@@ -5,14 +5,10 @@
 
   // src/Command.ts
   var Command = class {
-    constructor(alias, shortDesc = "", longDesc = "", run = async () => "Command is missing a run function.") {
+    constructor(alias, run = async () => "Command is missing a run function.") {
       __publicField(this, "alias");
-      __publicField(this, "shortDesc");
-      __publicField(this, "longDesc");
       __publicField(this, "run");
       this.alias = alias;
-      this.shortDesc = shortDesc;
-      this.longDesc = longDesc || shortDesc;
       this.run = run;
     }
   };
@@ -20,7 +16,7 @@
   function getCommands() {
     return [...commands];
   }
-  function createCommand(alias, shortDesc, longDesc, run) {
+  function createCommand(alias, run) {
     if (!alias || alias.trim() == "") {
       throw new SyntaxError("Command must have alias");
     }
@@ -31,7 +27,7 @@
     if (exists) {
       throw new Error(`Command ${alias} already exists`);
     }
-    commands.push(new Command(alias, shortDesc, longDesc, run));
+    commands.push(new Command(alias, run));
   }
   function deleteCommand(alias) {
     const index = commands.findIndex((c) => c.alias === alias);
@@ -42,53 +38,45 @@
   function registerDefaultCommands() {
     createCommand(
       "echo",
-      "Prints text to the console.",
-      "Usage: echo <text>\nPrints the provided text back to the screen.",
-      async function(_, args) {
+      async function(args) {
         if (args.length === 0) return "<err>Usage: echo <text></err>";
         return args.join(" ");
       }
     );
     createCommand(
       "clear",
-      "Clears the terminal screen.",
-      "Usage: clear\nResets the console display and clears all previous output.",
-      async function() {
-        this.container.innerHTML = "";
+      async function(args) {
+        if (args[0] == "--help") {
+          return "Clears the terminal screen.";
+        } else {
+          this.container.innerHTML = "";
+        }
       }
     );
     createCommand(
       "wait",
-      "Waits for a given number of milliseconds.",
-      "Usage: wait <ms>\nPauses the terminal for a specific number of milliseconds. Useful for scripting delays.",
-      async function(_, args) {
-        const time = parseInt(args[0], 10);
-        if (isNaN(time) || time < 0) return "<err>Usage: wait <milliseconds></err>";
-        await new Promise((res) => setTimeout(res, time));
+      async function(args) {
+        if (args[0] == "--help") {
+          return "Delays for a specified amount of milliseconds";
+        } else {
+          const time = parseInt(args[0], 10);
+          if (isNaN(time) || time < 0) return "<err>Usage: wait <milliseconds></err>";
+          await new Promise((res) => setTimeout(res, time));
+        }
       }
     );
     createCommand(
       "help",
-      "Lists available commands.",
-      "Usage: help [command]\nWithout arguments, lists all available commands.\nUse `help <command>` for detailed info.",
-      async function(_, args) {
-        if (args.length > 0) {
-          const commands2 = getCommands();
-          const cmd = commands2.find((c) => c.alias == args[0]);
-          return cmd ? `${cmd.alias}
-${cmd.longDesc}` : `<err>No such command: ${args[0]}</err>`;
+      async function(args) {
+        if (args[0] == "--help") {
+          return "Displays all available commands";
+        } else {
+          return "Available Commands:\n" + commands.map((cmd) => `  ${cmd.alias}`).join("\n");
         }
-        const lines = commands.map((cmd) => {
-          const aliases = cmd.alias;
-          return `  ${aliases.padEnd(20)} - ${cmd.shortDesc}`;
-        });
-        return "Available Commands:\n" + lines.join("\n");
       }
     );
     createCommand(
-      "version",
-      "Displays version info.",
-      "Usage: version\nShows current version, branch, and developer information.",
+      "ver",
       async function() {
         return [
           "Konsole Info:",
@@ -100,26 +88,28 @@ ${cmd.longDesc}` : `<err>No such command: ${args[0]}</err>`;
     );
     createCommand(
       "nl",
-      "Prints a blank line.",
-      "Usage: nl\nInserts a newline into the output.",
-      async function() {
-        return "\n";
+      async function(args) {
+        if (args[0] == "--help") {
+          return "Prints a new line";
+        } else {
+          return "\n";
+        }
       }
     );
     createCommand(
       "vars",
-      "Lists all variables.",
-      "Usage: vars\nLists all available variables that can be used with curly braces (e.g., {version}).",
-      async function() {
-        const vars = Object.entries(this.options.variables);
-        if (vars.length === 0) return "<err>No variables defined.</err>";
-        return "Available Variables:\n" + vars.map(([key, value]) => `  ${key} = ${value.includes("\n") ? `[${value.split("\n")[0]}...]` : value}`).join("\n");
+      async function(args) {
+        if (args[0] == "--help") {
+          return "Lists all variables.";
+        } else {
+          const vars = Object.entries(this.options.variables);
+          if (vars.length === 0) return "<err>No variables defined.</err>";
+          return "Available Variables:\n" + vars.map(([key, value]) => `  ${key} = ${value.includes("\n") ? `[${value.split("\n")[0]}...]` : value}`).join("\n");
+        }
       }
     );
     createCommand(
       "about",
-      "Displays Konsole info.",
-      "Usage: about\nShows Konsole's developer and ASCII art source.",
       async function() {
         return [
           "For use where a console is needed on the web",
@@ -130,32 +120,43 @@ ${cmd.longDesc}` : `<err>No such command: ${args[0]}</err>`;
     );
     createCommand(
       "set",
-      "Sets a variable for use in commands.",
-      "Usage: set <variable> <value>\nSets a variable that can be used in commands with curly braces (e.g., {variable}).",
-      async function(_, args) {
-        if (args.length < 2) return "<err>Usage: set <variable> <value></err>";
-        const [key, ...valueParts] = args;
-        const value = valueParts.join(" ");
-        this.options.variables[key] = value;
-        return `Variable ${key} set to "${value}"`;
+      async function(args) {
+        if (args[0] == "--help") {
+          return "Sets a variable for use in commands.";
+        } else {
+          if (args.length < 2) return "<err>Usage: set <variable> <value></err>";
+          const [key, ...valueParts] = args;
+          const value = valueParts.join(" ");
+          this.options.variables[key] = value;
+          return `Variable ${key} set to "${value}"`;
+        }
       }
     );
     createCommand(
       "run",
-      'Runs a ".ks" script.',
-      'Usage: run <script location>\nRuns a ".ks" script.',
-      async function(_, args) {
-        try {
-          if (args.length < 1) return "<err>Usage: run <script location></err>";
-          const result = await fetch(args[0]);
-          if (!result.ok) return "<err>Inaccessible script location</err>";
-          const script = await result.text();
-          return await this.runCommand(script, true);
-        } catch (err) {
-          if (err instanceof Error) {
-            return `<err>Failed to fetch script: ${err.message}</err>`;
+      async function(args) {
+        if (args[0] == "--help") {
+          return 'Runs a ".js" script.';
+        } else {
+          try {
+            if (args.length < 1) return "<err>Usage: run <script location></err>";
+            const result = await fetch(args[0]);
+            if (!result.ok) return "<err>Inaccessible script location</err>";
+            const script = await result.text();
+            const blob = new Blob([script], { type: "text/javascript" });
+            const url = URL.createObjectURL(blob);
+            const module = await import(url);
+            URL.revokeObjectURL(url);
+            if (typeof module.default !== "function") {
+              return "<err>Script has no default function</err>";
+            }
+            return await module.default.call(this);
+          } catch (err) {
+            if (err instanceof Error) {
+              return `<err>Error running script: ${err.message}</err>`;
+            }
+            return `<err>Error running script: ${String(err)}</err>`;
           }
-          return `<err>Failed to fetch script: ${String(err)}</err>`;
         }
       }
     );
@@ -181,9 +182,9 @@ ${cmd.longDesc}` : `<err>No such command: ${args[0]}</err>`;
     "color": "lime",
     "cursor": "text",
     "font-family": "monospace",
-    "overflow": "auto",
+    "white-space": "pre-wrap",
+    "overflow-wrap": "break-word",
     "padding": "5px",
-    "white-space": "pre",
     "width": "100%",
     "height": "100%"
   };
@@ -210,6 +211,7 @@ ${cmd.longDesc}` : `<err>No such command: ${args[0]}</err>`;
       __publicField(this, "options");
       __publicField(this, "createCommand", createCommand);
       __publicField(this, "deleteCommand", deleteCommand);
+      __publicField(this, "getCommands", getCommands);
       this.container = container;
       this.options = new KonsoleOptions(options);
       for (const [key, value] of Object.entries(defaultStyle)) {
@@ -335,9 +337,11 @@ ${cmd.longDesc}` : `<err>No such command: ${args[0]}</err>`;
       this.container.scrollTop = this.container.scrollHeight;
     }
     update(...args) {
+      let elems = [];
       args.forEach((text) => {
         const newElem = document.createElement("span");
         newElem.innerHTML = this.formatOutput(text);
+        elems.push(newElem);
         this.container.appendChild(newElem);
       });
       if (this.input.text != this.input.previous) {
@@ -356,6 +360,7 @@ ${cmd.longDesc}` : `<err>No such command: ${args[0]}</err>`;
       }
       this.cursor.element.innerText = this.options.cursor;
       this.container.appendChild(this.cursor.element);
+      return elems;
     }
     async replaceVars(text = "") {
       let prev = "";
@@ -378,17 +383,18 @@ ${cmd.longDesc}` : `<err>No such command: ${args[0]}</err>`;
         const alias = args.shift();
         if (!alias) continue;
         const command = getCommands().find((cmd) => cmd.alias == alias);
+        if (this.container.innerText != "") this.update("\n");
         if (command) {
-          const result = await command.run.call(this, alias, args);
+          const result = await command.run.call(this, args);
           if (result) {
-            this.update("\n" + await this.replaceVars(result));
+            this.update(await this.replaceVars(result));
           }
         } else {
-          this.update(`
-<err>Unknown command: "${alias}"</err>`);
+          this.update(`<err>Unknown command: "${alias}"</err>`);
         }
       }
-      if (!inline) this.update("\n" + this.options.prefix);
+      if (this.container.innerText != "") this.update("\n");
+      if (!inline) this.update(this.options.prefix);
       this.commandRunning = false;
     }
   };

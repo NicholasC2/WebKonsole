@@ -1,7 +1,6 @@
 import { Konsole } from "./Konsole";
 
 type CommandRun = (
-    konsole: Konsole,
     args: string[]
 ) => Promise<string | void>;
   
@@ -87,29 +86,15 @@ export function registerDefaultCommands() {
         "help", 
         async function (this: Konsole, args) {
             if(args[0] == "--help") {
-                return "Delays for a specified amount of milliseconds"
+                return "Displays all available commands"
             } else {
-                if (args.length > 0) {
-                    const commands = getCommands()
-                    const cmd = commands.find(c => c.alias == args[0]);
-                    return cmd ? `${cmd.alias}` : `<err>No such command: ${args[0]}</err>`;
-                }
-
-                const lines = commands.map(cmd => {
-                    const aliases = cmd.alias;
-                    const helpText = cmd.run(this, ["--help"]);
-                    return `  ${aliases.padEnd(20)}`;
-                });
-
-                return "Available Commands:\n" + lines.join("\n");
+                return "Available Commands:\n" + commands.map(cmd => `  ${cmd.alias}`).join("\n");
             }
         }
     );
 
     createCommand(
-        "version",
-        "Displays version info.",
-        "Usage: version\nShows current version, branch, and developer information.",
+        "ver",
         async function () {
             return [
                 "Konsole Info:",
@@ -122,30 +107,32 @@ export function registerDefaultCommands() {
 
     createCommand(
         "nl",
-        "Prints a blank line.",
-        "Usage: nl\nInserts a newline into the output.",
-        async function () {
-            return "\n";
+        async function (this: Konsole, args) {
+            if(args[0] == "--help") {
+                return "Prints a new line"
+            } else {
+                return "\n";
+            }
         }
     );
 
     createCommand(
         "vars",
-        "Lists all variables.",
-        "Usage: vars\nLists all available variables that can be used with curly braces (e.g., {version}).",
-        async function (this: Konsole) {
-            const vars = Object.entries(this.options.variables);
-            if (vars.length === 0) return "<err>No variables defined.</err>";
-            
-            return "Available Variables:\n" +
-                vars.map(([key, value]) => `  ${key} = ${value.includes("\n") ? `[${value.split("\n")[0]}...]` : value}`).join("\n");
+        async function (this: Konsole, args) {
+            if(args[0] == "--help") {
+                return "Lists all variables."
+            } else {
+                const vars = Object.entries(this.options.variables);
+                if (vars.length === 0) return "<err>No variables defined.</err>";
+                
+                return "Available Variables:\n" +
+                    vars.map(([key, value]) => `  ${key} = ${value.includes("\n") ? `[${value.split("\n")[0]}...]` : value}`).join("\n");
+            }
         }
     );
 
     createCommand(
         "about",
-        "Displays Konsole info.",
-        "Usage: about\nShows Konsole's developer and ASCII art source.",
         async function () {
             return [
                 "For use where a console is needed on the web",
@@ -157,33 +144,48 @@ export function registerDefaultCommands() {
 
     createCommand(
         "set",
-        "Sets a variable for use in commands.",
-        "Usage: set <variable> <value>\nSets a variable that can be used in commands with curly braces (e.g., {variable}).",
-        async function (this: Konsole, _, args) {
-            if (args.length < 2) return "<err>Usage: set <variable> <value></err>";
-            const [key, ...valueParts] = args;
-            const value = valueParts.join(" ");
-            this.options.variables[key] = value;
-            return `Variable ${key} set to "${value}"`;
+        async function (this: Konsole, args) {
+            if(args[0] == "--help") {
+                return "Sets a variable for use in commands."
+            } else {
+                if (args.length < 2) return "<err>Usage: set <variable> <value></err>";
+                const [key, ...valueParts] = args;
+                const value = valueParts.join(" ");
+                this.options.variables[key] = value;
+                return `Variable ${key} set to "${value}"`;
+            }
         }
     );
 
     createCommand(
         "run",
-        "Runs a \".ks\" script.",
-        "Usage: run <script location>\nRuns a \".ks\" script.",
-        async function(this: Konsole, _, args) {
-            try {
-                if(args.length < 1) return "<err>Usage: run <script location></err>";
-                const result = await fetch(args[0])
-                if(!result.ok) return "<err>Inaccessible script location</err>";
-                const script = await result.text()
-                return await this.runCommand(script, true);
-            } catch(err: unknown) {
-                if (err instanceof Error) {
-                    return `<err>Failed to fetch script: ${err.message}</err>`;
+        async function(this: Konsole, args) {
+            if(args[0] == "--help") {
+                return "Runs a \".js\" script."
+            } else {
+                try {
+                    if(args.length < 1) return "<err>Usage: run <script location></err>";
+                    const result = await fetch(args[0])
+                    if(!result.ok) return "<err>Inaccessible script location</err>";
+                    const script = await result.text()
+
+                    const blob = new Blob([script], { type: "text/javascript" });
+                    const url = URL.createObjectURL(blob);
+
+                    const module = await import(url);
+                    URL.revokeObjectURL(url);
+
+                    if (typeof module.default !== "function") {
+                        return "<err>Script has no default function</err>";
+                    }
+
+                    return await module.default.call(this);
+                } catch(err: unknown) {
+                    if (err instanceof Error) {
+                        return `<err>Error running script: ${err.message}</err>`;
+                    }
+                    return `<err>Error running script: ${String(err)}</err>`;
                 }
-                return `<err>Failed to fetch script: ${String(err)}</err>`;
             }
         }
     );
