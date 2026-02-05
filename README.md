@@ -17,16 +17,16 @@ const konsole = new Konsole(container);
 
 ## Built-in Commands
 
-`echo`  - Prints text to the console.  
+`echo` - Prints text to the console.  
 `clear` - Clears the terminal screen.  
-`wait`  - Waits for a given number of milliseconds.  
-`help`  - Lists available commands.  
-`ver`   - Displays version info.  
-`nl`    - Prints a blank line.  
-`vars`  - Lists all variables.  
+`wait` - Waits for a given number of milliseconds.  
+`help` - Lists available commands.  
+`ver` - Displays version info.  
+`nl` - Prints a blank line.  
+`vars` - Lists all variables.  
 `about` - Displays Konsole info.  
-`set`   - Sets a variable for use in commands.  
-`run`   - Runs a ".ks" script.  
+`set` - Sets a variable for use in commands.  
+`run` - Runs a ".ks" script.  
 
 ## Variable Replacement
 
