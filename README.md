@@ -1,8 +1,8 @@
 ![ezgif-36570c961dfe7213](https://github.com/user-attachments/assets/0389116b-ecae-41d6-8682-f0110a12b551)
 
-# Konsole – Browser Console
+# WebKonsole
 
-Konsole is a lightweight, extensible console, designed to fit perfectly into any project. It supports custom commands, custom scripts, and dynamic variable injection, all in a slick terminal UI, designed for scalablilty and ease-of-use.
+WebKonsole is a lightweight, extensible console, designed to fit perfectly into any project. It supports custom commands, custom scripts, and dynamic variable injection, all in a slick terminal UI, designed for scalablilty and ease-of-use.
 
 ## Live Demo
 
