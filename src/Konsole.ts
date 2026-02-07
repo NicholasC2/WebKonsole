@@ -1,7 +1,7 @@
 import { createCommand, deleteCommand, getCommands, registerDefaultCommands } from "./Command";
 
 export const defaultVariables = {
-    "version": "1.0.01",
+    "version": "1.0.02",
     "version_ascii": `\
 :::    ::: ::::::::  ::::    :::  ::::::::   ::::::::  :::        :::::::::: 
 :+:   :+: :+:    :+: :+:+:   :+: :+:    :+: :+:    :+: :+:        :+:        
@@ -25,6 +25,8 @@ const defaultStyle = {
     "padding": "5px",
     "width": "100%",
     "height": "100%",
+    "overflow-y": "scroll",
+    "text-align": "left"
 }
 
 export class KonsoleOptions {
