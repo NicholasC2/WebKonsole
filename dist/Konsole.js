@@ -164,7 +164,7 @@
 
   // src/Konsole.ts
   var defaultVariables = {
-    "version": "1.0.01",
+    "version": "1.0.02",
     "version_ascii": `:::    ::: ::::::::  ::::    :::  ::::::::   ::::::::  :::        :::::::::: 
 :+:   :+: :+:    :+: :+:+:   :+: :+:    :+: :+:    :+: :+:        :+:        
 +:+  +:+  +:+    +:+ :+:+:+  +:+ +:+        +:+    +:+ +:+        +:+        
@@ -186,7 +186,9 @@
     "overflow-wrap": "break-word",
     "padding": "5px",
     "width": "100%",
-    "height": "100%"
+    "height": "100%",
+    "overflow-y": "scroll",
+    "text-align": "left"
   };
   var KonsoleOptions = class {
     constructor({ initCommand, prefix, cursor, variables } = {}) {
