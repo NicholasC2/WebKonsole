@@ -1,7 +1,7 @@
 import { createCommand, deleteCommand, getCommands, registerDefaultCommands } from "./Command";
 
 export const defaultVariables = {
-    "version": "1.0.02",
+    "version": "1.0.03",
     "version_ascii": `\
 :::    ::: ::::::::  ::::    :::  ::::::::   ::::::::  :::        :::::::::: 
 :+:   :+: :+:    :+: :+:+:   :+: :+:    :+: :+:    :+: :+:        :+:        
@@ -272,7 +272,7 @@ export class Konsole {
         this.cursor.visible = false;
         this.update();
 
-        const lines = inputText.replaceAll(";", "\n").split("\n").map(l => l.trim()).filter(Boolean);
+        const lines = inputText.split("\n").map(l => l.trim()).filter(Boolean);
 
         for (const line of lines) {
             const replacedLine = await this.replaceVars(line);

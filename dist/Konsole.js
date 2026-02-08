@@ -160,11 +160,28 @@
         }
       }
     );
+    createCommand(
+      "pause",
+      async function(args) {
+        if (args[0] == "--help") {
+          return "pauses until the user presses enter.";
+        } else {
+          this.update("Press enter to continue...");
+          return new Promise((resolve) => {
+            this.container.addEventListener("keydown", (event) => {
+              if (event.key == "Enter") {
+                resolve();
+              }
+            });
+          });
+        }
+      }
+    );
   }
 
   // src/Konsole.ts
   var defaultVariables = {
-    "version": "1.0.02",
+    "version": "1.0.03",
     "version_ascii": `:::    ::: ::::::::  ::::    :::  ::::::::   ::::::::  :::        :::::::::: 
 :+:   :+: :+:    :+: :+:+:   :+: :+:    :+: :+:    :+: :+:        :+:        
 +:+  +:+  +:+    +:+ :+:+:+  +:+ +:+        +:+    +:+ +:+        +:+        
@@ -378,7 +395,7 @@
       this.commandRunning = true;
       this.cursor.visible = false;
       this.update();
-      const lines = inputText.replaceAll(";", "\n").split("\n").map((l) => l.trim()).filter(Boolean);
+      const lines = inputText.split("\n").map((l) => l.trim()).filter(Boolean);
       for (const line of lines) {
         const replacedLine = await this.replaceVars(line);
         const args = replacedLine.split(" ");

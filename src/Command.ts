@@ -189,4 +189,22 @@ export function registerDefaultCommands() {
             }
         }
     );
+
+    createCommand(
+        "pause",
+        async function(this: Konsole, args) {
+            if(args[0] == "--help") {
+                return "pauses until the user presses enter."
+            } else {
+                this.update("Press enter to continue...")
+                return new Promise((resolve) => {
+                    this.container.addEventListener("keydown", (event)=>{
+                        if(event.key == "Enter") {
+                            resolve();
+                        }
+                    })
+                })
+            }
+        }
+    );
 }
