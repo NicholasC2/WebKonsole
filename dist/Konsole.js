@@ -181,7 +181,7 @@
 
   // src/Konsole.ts
   var defaultVariables = {
-    "version": "1.0.04",
+    "version": "1.0.05",
     "version_ascii": `:::    ::: ::::::::  ::::    :::  ::::::::   ::::::::  :::        :::::::::: 
 :+:   :+: :+:    :+: :+:+:   :+: :+:    :+: :+:    :+: :+:        :+:        
 +:+  +:+  +:+    +:+ :+:+:+  +:+ +:+        +:+    +:+ +:+        +:+        
@@ -204,7 +204,7 @@
     "padding": "5px",
     "width": "100%",
     "height": "100%",
-    "overflow-y": "scroll",
+    "overflow-y": "auto",
     "text-align": "left"
   };
   var KonsoleOptions = class {
@@ -227,6 +227,7 @@
       __publicField(this, "input");
       __publicField(this, "history");
       __publicField(this, "commandRunning", false);
+      __publicField(this, "exitCommand", false);
       __publicField(this, "options");
       __publicField(this, "createCommand", createCommand);
       __publicField(this, "deleteCommand", deleteCommand);
@@ -290,10 +291,15 @@
     setupInputHandler() {
       this.container.setAttribute("tabindex", "0");
       this.container.addEventListener("keydown", async (e) => {
-        if (this.commandRunning) return;
-        if (!e.ctrlKey || e.key.toLowerCase() !== "c") {
-          e.preventDefault();
+        if (e.ctrlKey && e.key.toLowerCase() == "c") {
+          this.exitCommand = true;
+          if (this.container.innerText != "") this.update("\n");
+          this.update(this.options.prefix);
+          this.commandRunning = false;
+          return;
         }
+        if (this.commandRunning) return;
+        e.preventDefault();
         this.resetCursorBlink();
         const input = this.input.text;
         switch (e.key) {
@@ -392,6 +398,7 @@
       return text.replace("\\n", "\n");
     }
     async runCommand(inputText = "", inline = false) {
+      this.exitCommand = false;
       this.commandRunning = true;
       this.cursor.visible = false;
       this.update();
@@ -404,7 +411,9 @@
         const command = getCommands().find((cmd) => cmd.alias == alias);
         if (this.container.innerText != "") this.update("\n");
         if (command) {
+          if (this.exitCommand) return;
           const result = await command.run.call(this, args);
+          if (this.exitCommand) return;
           if (result) {
             this.update(await this.replaceVars(result));
           }
@@ -412,6 +421,7 @@
           this.update(`<err>Unknown command: "${alias}"</err>`);
         }
       }
+      if (this.exitCommand) return;
       if (this.container.innerText != "") this.update("\n");
       if (!inline) this.update(this.options.prefix);
       this.commandRunning = false;

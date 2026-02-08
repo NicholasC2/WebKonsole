@@ -1,7 +1,7 @@
 import { createCommand, deleteCommand, getCommands, registerDefaultCommands } from "./Command";
 
 export const defaultVariables = {
-    "version": "1.0.04",
+    "version": "1.0.05",
     "version_ascii": `\
 :::    ::: ::::::::  ::::    :::  ::::::::   ::::::::  :::        :::::::::: 
 :+:   :+: :+:    :+: :+:+:   :+: :+:    :+: :+:    :+: :+:        :+:        
@@ -25,7 +25,7 @@ const defaultStyle = {
     "padding": "5px",
     "width": "100%",
     "height": "100%",
-    "overflow-y": "scroll",
+    "overflow-y": "auto",
     "text-align": "left"
 }
 
@@ -40,14 +40,6 @@ export class KonsoleOptions {
         this.prefix = prefix ?? "$ ";
         this.cursor = cursor ?? "_";
         this.variables = Object.assign(defaultVariables, variables);
-    }
-}
-
-function applyDefaultStyle(target: HTMLElement, style: Record<string, string>) {
-    for (const [key, value] of Object.entries(style)) {
-        if (!target.style.getPropertyValue(key)) {
-            target.style.setProperty(key, value);
-        }
     }
 }
 
@@ -69,6 +61,7 @@ export class Konsole {
         entries: string[];
     };
     commandRunning: boolean = false;
+    exitCommand: boolean = false;
     options: KonsoleOptions;
     createCommand = createCommand;
     deleteCommand = deleteCommand;
@@ -156,11 +149,17 @@ export class Konsole {
         this.container.setAttribute("tabindex", "0");
 
         this.container.addEventListener("keydown", async (e) => {
+            if (e.ctrlKey && e.key.toLowerCase() == "c") {
+                this.exitCommand = true;
+                if(this.container.innerText != "") this.update("\n");
+                this.update(this.options.prefix);
+                this.commandRunning = false;
+                return;
+            }
+
             if (this.commandRunning) return;
 
-            if(!e.ctrlKey || e.key.toLowerCase() !== "c") {
-                e.preventDefault();
-            }
+            e.preventDefault();
             this.resetCursorBlink();
 
             const input = this.input.text;
@@ -280,6 +279,7 @@ export class Konsole {
     }
 
     async runCommand(inputText: string = "", inline = false) {
+        this.exitCommand = false;
         this.commandRunning = true;
         this.cursor.visible = false;
         this.update();
@@ -295,7 +295,9 @@ export class Konsole {
             if(this.container.innerText != "") this.update("\n");
 
             if (command) {
+                if(this.exitCommand) return
                 const result = await command.run.call(this, args);
+                if(this.exitCommand) return
                 if (result) {
                     this.update(await this.replaceVars(result));
                 }
@@ -303,6 +305,8 @@ export class Konsole {
                 this.update(`<err>Unknown command: "${alias}"</err>`);
             }
         }
+
+        if(this.exitCommand) return
 
         if(this.container.innerText != "") this.update("\n");
         if(!inline) this.update(this.options.prefix);
