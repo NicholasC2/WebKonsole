@@ -7,8 +7,15 @@
         <div class="konsole"></div>
         <script src="dist/Konsole.js"></script>
         <script>
+            let searchObject = {};
+            const searchText = location.search.slice(1);
+            searchText.split("&").forEach(searchPart => {
+                const [key, value] = searchPart.split("=");
+                searchObject[key] = value;
+            });
+
             const container = document.querySelector(".konsole")
-            const terminal = new Konsole(container)
+            const terminal = new Konsole(container, searchObject)
         </script>
         <div style="font-family: monospace;position: absolute;right: 10px;bottom: 10px;color: white;opacity: 50%;">Copyright © 2026 NicholasC</div>
     </body>
