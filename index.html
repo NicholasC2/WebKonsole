@@ -11,7 +11,7 @@
             const searchText = location.search.slice(1);
             searchText.split("&").forEach(searchPart => {
                 const [key, value] = searchPart.split("=");
-                searchObject[key] = value;
+                searchObject[key] = decodeURI(value);
             });
 
             const container = document.querySelector(".konsole")
