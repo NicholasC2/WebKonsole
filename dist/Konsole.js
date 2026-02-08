@@ -181,7 +181,7 @@
 
   // src/Konsole.ts
   var defaultVariables = {
-    "version": "1.0.03",
+    "version": "1.0.04",
     "version_ascii": `:::    ::: ::::::::  ::::    :::  ::::::::   ::::::::  :::        :::::::::: 
 :+:   :+: :+:    :+: :+:+:   :+: :+:    :+: :+:    :+: :+:        :+:        
 +:+  +:+  +:+    +:+ :+:+:+  +:+ +:+        +:+    +:+ +:+        +:+        
@@ -233,11 +233,11 @@
       __publicField(this, "getCommands", getCommands);
       this.container = container;
       this.options = new KonsoleOptions(options);
-      for (const [key, value] of Object.entries(defaultStyle)) {
-        if (!this.container.style.getPropertyValue(key)) {
-          this.container.style.setProperty(key, value);
-        }
-      }
+      this.container.classList.add("konsole-defaults");
+      const cssString = Object.entries(defaultStyle).map(([key, value]) => `${key}: ${value};`).join(" ");
+      const style = document.createElement("style");
+      style.textContent = `.konsole-defaults { ${cssString} }`;
+      document.head.insertBefore(style, document.head.firstChild);
       registerDefaultCommands();
       this.cursor = {
         element: document.createElement("div"),

@@ -1,7 +1,7 @@
 import { createCommand, deleteCommand, getCommands, registerDefaultCommands } from "./Command";
 
 export const defaultVariables = {
-    "version": "1.0.03",
+    "version": "1.0.04",
     "version_ascii": `\
 :::    ::: ::::::::  ::::    :::  ::::::::   ::::::::  :::        :::::::::: 
 :+:   :+: :+:    :+: :+:+:   :+: :+:    :+: :+:    :+: :+:        :+:        
@@ -43,6 +43,14 @@ export class KonsoleOptions {
     }
 }
 
+function applyDefaultStyle(target: HTMLElement, style: Record<string, string>) {
+    for (const [key, value] of Object.entries(style)) {
+        if (!target.style.getPropertyValue(key)) {
+            target.style.setProperty(key, value);
+        }
+    }
+}
+
 export class Konsole {
     container: HTMLElement;
     focused: boolean = false;
@@ -69,12 +77,16 @@ export class Konsole {
     constructor(container: HTMLElement, options: KonsoleOptions) {
         this.container = container;
         this.options = new KonsoleOptions(options);
+        this.container.classList.add("konsole-defaults");
 
-        for (const [key, value] of Object.entries(defaultStyle)) {
-            if (!this.container.style.getPropertyValue(key)) {
-                this.container.style.setProperty(key, value);
-            }
-        }
+        const cssString = Object.entries(defaultStyle)
+            .map(([key, value]) => `${key}: ${value};`)
+            .join(" ");
+
+        const style = document.createElement("style");
+        style.textContent = `.konsole-defaults { ${cssString} }`;
+        document.head.insertBefore(style, document.head.firstChild);
+
 
         registerDefaultCommands();
 
