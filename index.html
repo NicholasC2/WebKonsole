@@ -16,6 +16,42 @@
 
             const container = document.querySelector(".konsole")
             const terminal = new Konsole(container, searchObject)
+
+            function replaceCharAtIndex(originalString, index, newChar) {
+                if (index < 0 || index >= originalString.length) {
+                    return originalString;
+                }
+                const part1 = originalString.slice(0, index);
+                const part2 = originalString.slice(index + 1);
+                return part1 + newChar + part2;
+            }
+
+            terminal.createCommand("visualizer", (...args)=>{
+                return new Promise((resolve) => {
+                    setInterval(() => {
+                        const rows = []
+                        for(let i = 0; i < 50; i++) {
+                            rows.push(Math.floor(Math.random()*50))
+                        }
+
+                        let text = ""
+                        for(let z = 0; z < Math.max(...rows); z++) {
+                            text += " ".repeat(rows.length)+"\n"
+                        }
+                        
+                        let x = 0;
+                        for(const height of rows) {
+                            for(let y = 0; y < height / 2; y++) {
+                                const position = (y*(rows.length+1)) + x;
+                                text = replaceCharAtIndex(text, position, '█')
+                            }
+                            x++
+                        }
+
+                        terminal.container.innerHTML = text
+                    }, 100)
+                })
+            })
         </script>
         <div style="font-family: monospace;position: absolute;right: 10px;bottom: 10px;color: white;opacity: 50%;">Copyright © 2026 NicholasC</div>
     </body>
