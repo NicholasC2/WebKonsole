@@ -1,13 +1,7 @@
 (() => {
-  var __defProp = Object.defineProperty;
-  var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
-  var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
-
   // src/Command.ts
   var Command = class {
     constructor(alias, run = async () => "Command is missing a run function.") {
-      __publicField(this, "alias");
-      __publicField(this, "run");
       this.alias = alias;
       this.run = run;
     }
@@ -179,9 +173,46 @@
     );
   }
 
+  // src/Tokenizer.ts
+  function tokenize(input, delimiter) {
+    const tokens = [];
+    let current = "";
+    let inSingle = false;
+    let inDouble = false;
+    let escaped = false;
+    for (let i = 0; i < input.length; i++) {
+      const char = input[i];
+      if (escaped) {
+        current += char;
+        escaped = false;
+        continue;
+      }
+      if (char === "\\") {
+        escaped = true;
+        continue;
+      }
+      if (char === "'" && !inDouble) {
+        inSingle = !inSingle;
+        continue;
+      }
+      if (char === '"' && !inSingle) {
+        inDouble = !inDouble;
+        continue;
+      }
+      if (char === delimiter && !inSingle && !inDouble) {
+        if (current.trim()) tokens.push(current.trim());
+        current = "";
+      } else {
+        current += char;
+      }
+    }
+    if (current.trim()) tokens.push(current.trim());
+    return tokens;
+  }
+
   // src/Konsole.ts
   var defaultVariables = {
-    "version": "1.0.05",
+    "version": "1.0.06",
     "version_ascii": `:::    ::: ::::::::  ::::    :::  ::::::::   ::::::::  :::        :::::::::: 
 :+:   :+: :+:    :+: :+:+:   :+: :+:    :+: :+:    :+: :+:        :+:        
 +:+  +:+  +:+    +:+ :+:+:+  +:+ +:+        +:+    +:+ +:+        +:+        
@@ -209,11 +240,7 @@
   };
   var KonsoleOptions = class {
     constructor({ initCommand, prefix, cursor, variables } = {}) {
-      __publicField(this, "initCommand");
-      __publicField(this, "prefix");
-      __publicField(this, "cursor");
-      __publicField(this, "variables");
-      this.initCommand = initCommand != null ? initCommand : "echo {version_ascii}\n echo v{version}-{branch}\n echo https://github.com/NicholasC2/WebKonsole";
+      this.initCommand = initCommand != null ? initCommand : "echo {version_ascii};echo v{version}-{branch};echo https://github.com/NicholasC2/WebKonsole";
       this.prefix = prefix != null ? prefix : "$ ";
       this.cursor = cursor != null ? cursor : "_";
       this.variables = Object.assign(defaultVariables, variables);
@@ -221,17 +248,12 @@
   };
   var Konsole = class {
     constructor(container, options) {
-      __publicField(this, "container");
-      __publicField(this, "focused", false);
-      __publicField(this, "cursor");
-      __publicField(this, "input");
-      __publicField(this, "history");
-      __publicField(this, "commandRunning", false);
-      __publicField(this, "exitCommand", false);
-      __publicField(this, "options");
-      __publicField(this, "createCommand", createCommand);
-      __publicField(this, "deleteCommand", deleteCommand);
-      __publicField(this, "getCommands", getCommands);
+      this.focused = false;
+      this.commandRunning = false;
+      this.exitCommand = false;
+      this.createCommand = createCommand;
+      this.deleteCommand = deleteCommand;
+      this.getCommands = getCommands;
       this.container = container;
       this.options = new KonsoleOptions(options);
       this.container.classList.add("konsole-defaults");
@@ -262,17 +284,27 @@
       this.startBlink();
       this.runCommand(this.options.initCommand);
     }
+    async formatInput(text) {
+      let prev = "";
+      do {
+        prev = text;
+        for (const [key, value] of Object.entries(this.options.variables)) {
+          text = text.replaceAll(`{${key}}`, value);
+        }
+      } while (text !== prev);
+      return text.replaceAll("\\n", "\n");
+    }
     formatOutput(text) {
-      let out = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-      out = out.replace(
+      let out = text.replaceAll(/&/g, "&amp;").replaceAll(/</g, "&lt;").replaceAll(/>/g, "&gt;");
+      out = out.replaceAll(
         /&lt;c:([^&]+?)&gt;([\s\S]*?)&lt;\/c&gt;/g,
         (_, color, content) => `<span style="color:${color}">${content}</span>`
       );
-      out = out.replace(
+      out = out.replaceAll(
         /&lt;err&gt;([\s\S]*?)&lt;\/err&gt;/g,
         (_, content) => `<span style="color:red">${content}</span>`
       );
-      out = out.replace(
+      out = out.replaceAll(
         /(https?:\/\/[^\s]+)/g,
         `<a href="$1" target="_blank" rel="noopener noreferrer" style="color:#4f4ff7">$1</a>`
       );
@@ -387,24 +419,14 @@
       this.container.appendChild(this.cursor.element);
       return elems;
     }
-    async replaceVars(text = "") {
-      let prev = "";
-      do {
-        prev = text;
-        for (const [key, value] of Object.entries(this.options.variables)) {
-          text = text.replace(`{${key}}`, value);
-        }
-      } while (text !== prev);
-      return text.replace("\\n", "\n");
-    }
     async runCommand(inputText = "", inline = false) {
       this.exitCommand = false;
       this.commandRunning = true;
       this.cursor.visible = false;
       this.update();
-      const lines = inputText.split("\n").map((l) => l.trim()).filter(Boolean);
-      for (const line of lines) {
-        const replacedLine = await this.replaceVars(line);
+      const parts = tokenize(inputText, ";");
+      for (const part of parts) {
+        const replacedLine = await this.formatInput(part);
         const args = replacedLine.split(" ");
         const alias = args.shift();
         if (!alias) continue;
@@ -415,7 +437,7 @@
           const result = await command.run.call(this, args);
           if (this.exitCommand) return;
           if (result) {
-            this.update(await this.replaceVars(result));
+            this.update(await this.formatInput(result));
           }
         } else {
           this.update(`<err>Unknown command: "${alias}"</err>`);

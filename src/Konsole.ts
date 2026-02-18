@@ -1,7 +1,8 @@
 import { createCommand, deleteCommand, getCommands, registerDefaultCommands } from "./Command";
+import { tokenize } from "./Tokenizer";
 
 export const defaultVariables = {
-    "version": "1.0.05",
+    "version": "1.0.06",
     "version_ascii": `\
 :::    ::: ::::::::  ::::    :::  ::::::::   ::::::::  :::        :::::::::: 
 :+:   :+: :+:    :+: :+:+:   :+: :+:    :+: :+:    :+: :+:        :+:        
@@ -36,7 +37,7 @@ export class KonsoleOptions {
     variables: Record<string, string>
 
     constructor({ initCommand, prefix, cursor, variables }: Partial<KonsoleOptions> = {}) {
-        this.initCommand = initCommand ?? "echo {version_ascii}\n echo v{version}-{branch}\n echo https://github.com/NicholasC2/WebKonsole";
+        this.initCommand = initCommand ?? "echo {version_ascii};echo v{version}-{branch};echo https://github.com/NicholasC2/WebKonsole";
         this.prefix = prefix ?? "$ ";
         this.cursor = cursor ?? "_";
         this.variables = Object.assign(defaultVariables, variables);
@@ -110,23 +111,35 @@ export class Konsole {
         this.runCommand(this.options.initCommand);
     }
 
+    async formatInput(text: string) {
+        let prev = "";
+        do {
+            prev = text;
+            for (const [key, value] of Object.entries(this.options.variables)) {
+                text = text.replaceAll(`{${key}}`, value);
+            }
+        } while (text !== prev);
+
+        return text.replaceAll("\\n", "\n");
+    }
+
     formatOutput(text: string) {
         let out = text
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;");
+            .replaceAll(/&/g, "&amp;")
+            .replaceAll(/</g, "&lt;")
+            .replaceAll(/>/g, "&gt;");
 
-        out = out.replace(
+        out = out.replaceAll(
             /&lt;c:([^&]+?)&gt;([\s\S]*?)&lt;\/c&gt;/g,
             (_, color:string, content:string) => `<span style="color:${color}">${content}</span>`
         );
 
-        out = out.replace(
+        out = out.replaceAll(
             /&lt;err&gt;([\s\S]*?)&lt;\/err&gt;/g,
             (_, content:string) => `<span style="color:red">${content}</span>`
         );
 
-        out = out.replace(
+        out = out.replaceAll(
             /(https?:\/\/[^\s]+)/g,
             `<a href="$1" target="_blank" rel="noopener noreferrer" style="color:#4f4ff7">$1</a>`
         );
@@ -266,28 +279,16 @@ export class Konsole {
         return elems;
     }
 
-    async replaceVars(text = "") {
-        let prev = "";
-        do {
-            prev = text;
-            for (const [key, value] of Object.entries(this.options.variables)) {
-                text = text.replace(`{${key}}`, value);
-            }
-        } while (text !== prev);
-
-        return text.replace("\\n", "\n");
-    }
-
     async runCommand(inputText: string = "", inline = false) {
         this.exitCommand = false;
         this.commandRunning = true;
         this.cursor.visible = false;
         this.update();
 
-        const lines = inputText.split("\n").map(l => l.trim()).filter(Boolean);
+        const parts = tokenize(inputText, ";");
 
-        for (const line of lines) {
-            const replacedLine = await this.replaceVars(line);
+        for (const part of parts) {
+            const replacedLine = await this.formatInput(part);
             const args = replacedLine.split(" ");
             const alias = args.shift();
             if(!alias) continue;
@@ -299,7 +300,7 @@ export class Konsole {
                 const result = await command.run.call(this, args);
                 if(this.exitCommand) return
                 if (result) {
-                    this.update(await this.replaceVars(result));
+                    this.update(await this.formatInput(result));
                 }
             } else {
                 this.update(`<err>Unknown command: "${alias}"</err>`);
