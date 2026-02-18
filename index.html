@@ -4,7 +4,7 @@
         <title>WebKonsole</title>
     </head>
     <body style="background: black; height: calc(100vh - 16px);">
-        <!-- <audio src='' crossorigin='anonymous' controls></audio> -->
+        <audio src='./audio.mp3' controls></audio>
         <div class="konsole"></div>
         <script src="dist/Konsole.js"></script>
         <script>
@@ -18,39 +18,52 @@
             const container = document.querySelector(".konsole")
             const terminal = new Konsole(container, searchObject)
 
-            function replaceCharAtIndex(originalString, index, newChar) {
-                if (index < 0 || index >= originalString.length) {
-                    return originalString;
+            const audio = document.querySelector("audio");
+
+            let isInitialized = false;
+            audio.addEventListener("play", () => {
+                if (!isInitialized) {
+                    initialize();
+                    isInitialized = true
                 }
-                const part1 = originalString.slice(0, index);
-                const part2 = originalString.slice(index + 1);
-                return part1 + newChar + part2;
+            })
+
+            let analyser;
+            let dataArray;
+            let bufferLength;
+
+            function initialize() {    
+                const audioCtx = new AudioContext();
+                analyser = audioCtx.createAnalyser();
+                const source = audioCtx.createMediaElementSource(audio);
+                source.connect(analyser);
+                analyser.connect(audioCtx.destination)
+
+                analyser.fftSize = 256;
+                bufferLength = analyser.frequencyBinCount;
+                dataArray = new Uint8Array(bufferLength);
             }
 
             terminal.createCommand("visualizer", (...args)=>{
                 return new Promise((resolve) => {
                     setInterval(() => {
                         const rows = []
-                        for(let i = 0; i < 50; i++) {
-                            rows.push(Math.floor(Math.random()*50))
+
+                        analyser.getByteFrequencyData(dataArray)
+
+                        for (let i = 0; i < bufferLength / 4; i++) {
+                            rows.push(Math.pow(dataArray[i] / 16, 2))
                         }
 
                         let text = ""
-                        for(let z = 0; z < Math.max(...rows); z++) {
-                            text += " ".repeat(rows.length)+"\n"
-                        }
                         
-                        let x = 0;
                         for(const height of rows) {
-                            for(let y = 0; y < height / 2; y++) {
-                                const position = (y*(rows.length+1)) + x;
-                                text = replaceCharAtIndex(text, position, '█')
-                            }
-                            x++
+                            text = text + "1".repeat(height)
+                            text = text + "\n"
                         }
 
                         terminal.container.innerHTML = text
-                    }, 100)
+                    }, 16)
                 })
             })
         </script>
