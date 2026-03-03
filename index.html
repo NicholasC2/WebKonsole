@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>WebKonsole</title>
+        <title>WebKonsole - v1.0.06</title>
     </head>
     <body style="background: black; height: calc(100vh - 16px);">
-        <audio src='./audio.mp3' controls></audio>
         <div class="konsole"></div>
         <script src="dist/Konsole.js"></script>
         <script>
@@ -17,56 +16,7 @@
 
             const container = document.querySelector(".konsole")
             const terminal = new Konsole(container, searchObject)
-
-            const audio = document.querySelector("audio");
-
-            let isInitialized = false;
-            audio.addEventListener("play", () => {
-                if (!isInitialized) {
-                    initialize();
-                    isInitialized = true
-                }
-            })
-
-            let analyser;
-            let dataArray;
-            let bufferLength;
-
-            function initialize() {    
-                const audioCtx = new AudioContext();
-                analyser = audioCtx.createAnalyser();
-                const source = audioCtx.createMediaElementSource(audio);
-                source.connect(analyser);
-                analyser.connect(audioCtx.destination)
-
-                analyser.fftSize = 256;
-                bufferLength = analyser.frequencyBinCount;
-                dataArray = new Uint8Array(bufferLength);
-            }
-
-            terminal.createCommand("visualizer", (...args)=>{
-                return new Promise((resolve) => {
-                    setInterval(() => {
-                        const rows = []
-
-                        analyser.getByteFrequencyData(dataArray)
-
-                        for (let i = 0; i < bufferLength / 4; i++) {
-                            rows.push(Math.pow(dataArray[i] / 16, 2))
-                        }
-
-                        let text = ""
-                        
-                        for(const height of rows) {
-                            text = text + "1".repeat(height)
-                            text = text + "\n"
-                        }
-
-                        terminal.container.innerHTML = text
-                    }, 16)
-                })
-            })
         </script>
-        <div style="font-family: monospace;position: absolute;right: 10px;bottom: 10px;color: white;opacity: 50%;">Copyright © 2026 NicholasC</div>
+        <div style="font-family: monospace;position: sticky;bottom: 10px;color: white;opacity: 50%;">Copyright © 2026 NicholasC</div>
     </body>
 </html>
