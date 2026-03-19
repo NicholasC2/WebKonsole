@@ -212,7 +212,7 @@
 
   // src/Konsole.ts
   var defaultVariables = {
-    "version": "1.0.06",
+    "version": "1.0.07",
     "version_ascii": `:::    ::: ::::::::  ::::    :::  ::::::::   ::::::::  :::        :::::::::: 
 :+:   :+: :+:    :+: :+:+:   :+: :+:    :+: :+:    :+: :+:        :+:        
 +:+  +:+  +:+    +:+ :+:+:+  +:+ +:+        +:+    +:+ +:+        +:+        
@@ -265,7 +265,8 @@
       this.cursor = {
         element: document.createElement("div"),
         blinkTime: 0,
-        visible: false
+        visible: false,
+        hidden: false
       };
       this.input = {
         element: document.createElement("div"),
@@ -406,7 +407,7 @@
         this.input.previous = this.input.text;
         this.container.appendChild(this.input.element);
       }
-      if (this.focused && this.cursor.visible && !this.commandRunning) {
+      if (this.focused && this.cursor.visible && !this.cursor.hidden) {
         if (this.cursor.element.style.display != "inline") {
           this.cursor.element.style.display = "inline";
         }
@@ -422,6 +423,7 @@
     async runCommand(inputText = "", inline = false) {
       this.exitCommand = false;
       this.commandRunning = true;
+      this.cursor.hidden = true;
       this.cursor.visible = false;
       this.update();
       const parts = tokenize(inputText, ";");
@@ -447,6 +449,7 @@
       if (this.container.innerText != "") this.update("\n");
       if (!inline) this.update(this.options.prefix);
       this.commandRunning = false;
+      this.cursor.hidden = false;
     }
   };
 
