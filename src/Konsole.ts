@@ -2,7 +2,7 @@ import { createCommand, deleteCommand, getCommands, registerDefaultCommands } fr
 import { tokenize } from "./Tokenizer";
 
 export const defaultVariables = {
-    "version": "1.0.06",
+    "version": "1.0.07",
     "version_ascii": `\
 :::    ::: ::::::::  ::::    :::  ::::::::   ::::::::  :::        :::::::::: 
 :+:   :+: :+:    :+: :+:+:   :+: :+:    :+: :+:    :+: :+:        :+:        
