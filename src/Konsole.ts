@@ -48,6 +48,7 @@ export class Konsole {
     container: HTMLElement;
     focused: boolean = false;
     cursor: {
+        hidden: boolean;
         visible: boolean;
         blinkTime: number;
         element: HTMLElement;
@@ -87,7 +88,8 @@ export class Konsole {
         this.cursor = {
             element: document.createElement("div"),
             blinkTime: 0,
-            visible: false
+            visible: false,
+            hidden: false
         }
 
         this.input = {
@@ -263,7 +265,7 @@ export class Konsole {
             this.container.appendChild(this.input.element)
         }
 
-        if(this.focused && this.cursor.visible && !this.commandRunning) {
+        if(this.focused && this.cursor.visible && !this.cursor.hidden) {
             if(this.cursor.element.style.display != "inline") {
                 this.cursor.element.style.display = "inline"
             }
@@ -282,6 +284,7 @@ export class Konsole {
     async runCommand(inputText: string = "", inline = false) {
         this.exitCommand = false;
         this.commandRunning = true;
+        this.cursor.hidden = true;
         this.cursor.visible = false;
         this.update();
 
@@ -312,5 +315,6 @@ export class Konsole {
         if(this.container.innerText != "") this.update("\n");
         if(!inline) this.update(this.options.prefix);
         this.commandRunning = false;
+        this.cursor.hidden = false;
     }
 }
