@@ -47,6 +47,7 @@ export namespace WebKonsole {
         private commandRunning: boolean = false;
         private exitCommand: boolean = false;
         private commands: Command[] = [];
+        private cursorBlinkTimout: number = 0;
 
         constructor(
             public element: HTMLElement, 
@@ -64,18 +65,20 @@ export namespace WebKonsole {
             this.cursorElement.style.userSelect = "none";
             this.element.appendChild(this.cursorElement);
 
+            this.runCommand(this.options.initCommand);
+        }
+
+        startCursorBlink() {
             const blinkChangeState = () => {
                 this.cursorElement.innerText =
                     this.cursorElement.innerText === this.options.cursor.text
                         ? ""
                         : this.options.cursor.text;
 
-                setTimeout(blinkChangeState, this.options.cursor.blinkTime);
+                this.cursorBlinkTimout = setTimeout(blinkChangeState, this.options.cursor.blinkTime);
             };
 
             blinkChangeState();
-
-            this.runCommand(this.options.initCommand);
         }
 
         registerCommand(command: Command) {
@@ -208,52 +211,54 @@ export namespace WebKonsole {
             this.registerCommand(
                 {
                     alias: "run",
-                    run: async function(this: Konsole, args) {
-                    if(args[0] == "--help") {
-                        return "Runs a \".js\" script."
-                    } else {
-                        try {
-                            if(args.length < 1) return "<err>Usage: run <script location></err>";
-                            const result = await fetch(args[0])
-                            if(!result.ok) return "<err>Inaccessible script location</err>";
-                            const script = await result.text()
+                    run: async (args) => {
+                        if(args[0] == "--help") {
+                            return "Runs a \".js\" script."
+                        } else {
+                            try {
+                                if(args.length < 2) return "<err>Usage: run <script location></err>";
+                                const result = await fetch(args[1])
+                                if(!result.ok) return "<err>Inaccessible script location</err>";
+                                const script = await result.text()
 
-                            const blob = new Blob([script], { type: "text/javascript" });
-                            const url = URL.createObjectURL(blob);
+                                const blob = new Blob([script], { type: "text/javascript" });
+                                const url = URL.createObjectURL(blob);
 
-                            const module = await import(url);
-                            URL.revokeObjectURL(url);
+                                const module = await import(url);
+                                URL.revokeObjectURL(url);
 
-                            if (typeof module.default !== "function") {
-                                return "<err>Script has no default function</err>";
+                                if (typeof module.default !== "function") {
+                                    return "<err>Script has no default function</err>";
+                                }
+
+                                return await module.default.call(this);
+                            } catch(err: unknown) {
+                                if (err instanceof Error) {
+                                    return `<err>Error running script: ${err.message}</err>`;
+                                }
+                                return `<err>Error running script: ${String(err)}</err>`;
                             }
-
-                            return await module.default.call(this);
-                        } catch(err: unknown) {
-                            if (err instanceof Error) {
-                                return `<err>Error running script: ${err.message}</err>`;
-                            }
-                            return `<err>Error running script: ${String(err)}</err>`;
                         }
                     }
                 }
-                }
             )
 
-            createCommand(
-                "pause",
-                async function(this: Konsole, args) {
-                    if(args[0] == "--help") {
-                        return "pauses until the user presses enter."
-                    } else {
-                        this.update("Press enter to continue...")
-                        return new Promise((resolve) => {
-                            this.container.addEventListener("keydown", (event)=>{
-                                if(event.key == "Enter") {
-                                    resolve();
-                                }
+            this.registerCommand(
+                {    
+                    alias: "pause",
+                    run: async (args) => {
+                        if(args[1] == "--help") {
+                            return "pauses until the user presses enter."
+                        } else {
+                            this.element.innerText += "Press enter to continue..."
+                            return new Promise((resolve) => {
+                                this.element.addEventListener("keydown", (event)=>{
+                                    if(event.key == "Enter") {
+                                        resolve();
+                                    }
+                                });
                             })
-                        })
+                        }
                     }
                 }
             );
@@ -296,7 +301,9 @@ export namespace WebKonsole {
 
             this.element.addEventListener("keydown", async (e) => {
                 e.preventDefault();
-                this.resetCursorBlink();
+                clearTimeout(this.cursorBlinkTimout);
+                this.cursorElement.innerHTML = this.options.cursor.text;
+                this.startCursorBlink();
                 
                 if (this.commandRunning) return; // prevent anything after this to run if a command is already running
 
@@ -355,11 +362,6 @@ export namespace WebKonsole {
                 this.focused = false;
                 this.update();
             });
-        }
-
-        resetCursorBlink() {
-            this.cursor.visible = true;
-            this.cursor.blinkTime = 0;
         }
 
         navigateHistory(direction: number) {
