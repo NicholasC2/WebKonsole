@@ -1,9 +1,15 @@
-import { Command } from "./Command";
-import { tokenize } from "./Tokenizer";
+import { Command, tokenize } from "./Command";
 
-export const defaultVariables = {
-    "version": "1.0.07",
-    "version_ascii": `\
+const defaultOptions: WebKonsole.Options = {
+    cursor: {
+        blinkTime: 500,
+        text: "|"
+    },
+    initCommand: "echo {version_ascii}\n{version}-{branch}",
+    prefix: "$",
+    variables: {
+        "version": "1.0.07",
+        "version_ascii": `\
 :::    ::: ::::::::  ::::    :::  ::::::::   ::::::::  :::        :::::::::: 
 :+:   :+: :+:    :+: :+:+:   :+: :+:    :+: :+:    :+: :+:        :+:        
 +:+  +:+  +:+    +:+ :+:+:+  +:+ +:+        +:+    +:+ +:+        +:+        
@@ -11,23 +17,9 @@ export const defaultVariables = {
 +#+  +#+  +#+    +#+ +#+  +#+#+#        +#+ +#+    +#+ +#+        +#+        
 #+#   #+# #+#    #+# #+#   #+#+# #+#    #+# #+#    #+# #+#        #+#        
 ###    ### ########  ###    ####  ########   ########  ########## ########## `, // https://patorjk.com/software/taag/#p=display&f=Alligator2&t=Konsole
-    "ascii_gen": "https://patorjk.com/software/taag/",
-    "branch": "stable"
-}
-
-const defaultStyle = {
-    "background-color": "black",
-    "box-sizing": "border-box",
-    "color": "lime",
-    "cursor": "text",
-    "font-family": "monospace",
-    "white-space": "pre-wrap",
-    "overflow-wrap": "break-word",
-    "padding": "5px",
-    "width": "100%",
-    "height": "100%",
-    "overflow-y": "auto",
-    "text-align": "left"
+        "ascii_gen": "https://patorjk.com/software/taag/",
+        "branch": "stable"
+    }
 }
 
 export namespace WebKonsole {
@@ -42,30 +34,77 @@ export namespace WebKonsole {
     }
 
     export class Instance {
-        private inputElement: HTMLElement;
-        private cursorElement: HTMLElement;
+        private options: Options;
+        private outputElement = document.createElement("div");
+        private prefixElement = document.createElement("div");
+        private inputElement = document.createElement("div");
+        private cursorElement = document.createElement("div");
         private commandRunning: boolean = false;
-        private exitCommand: boolean = false;
         private commands: Command[] = [];
-        private cursorBlinkTimout: number = 0;
+        private cursorBlinkTimout?: number;
 
         constructor(
             public element: HTMLElement, 
-            public options: Options,
-            public commandHistory: Command[]
+            options?: Partial<Options>,
+            public commandHistory: Command[] = []
         ) {
-            this.element.classList.add("konsole-defaults");
-            Object.assign(this.element.style, defaultStyle);
+            this.options = {
+                ...defaultOptions,
+                ...options,
+                cursor: {
+                    ...defaultOptions.cursor,
+                    ...options?.cursor
+                },
+                variables: {
+                    ...defaultOptions.variables,
+                    ...options?.variables
+                }
+            }
 
-            this.cursorElement = document.createElement("div");
-            this.inputElement = document.createElement("div");
+            this.startCursorBlink();
 
-            this.inputElement.style.display = "inline";
+            Object.assign(this.element.style, {
+                backgroundColor: "black",
+                boxSizing: "border-box",
+                color: "lime",
+                cursor: "text",
+                fontFamily: "monospace",
+                whiteSpace: "pre-wrap",
+                overflowWrap: "break-word",
+                padding: "5px",
+                width: "100%",
+                height: "100%",
+                overflowY: "auto",
+                textAlign: "left",
+            } satisfies Partial<CSSStyleDeclaration>);
+            
+            this.prefixElement.innerText = this.options.prefix;
+            this.element.appendChild(this.outputElement);
+            this.element.appendChild(this.prefixElement);
             this.element.appendChild(this.inputElement);
             this.cursorElement.style.userSelect = "none";
             this.element.appendChild(this.cursorElement);
 
-            this.runCommand(this.options.initCommand);
+            this.registerDefaultCommands();
+
+            this.exec(tokenize(this.options.initCommand));
+        }
+
+        async exec(command: string[]) {
+            const cmd = this.commands.find(c => c.alias.includes(command[0]));
+
+            if(cmd) {
+                this.commandRunning = true;
+                const result = await cmd.run(command);
+
+                if(result) {
+                    this.render(result);
+                }
+
+                this.commandRunning = false;
+            } else {
+                this.render(`{c:red}Command not found: "${command[0]}"{/c}`)
+            }
         }
 
         startCursorBlink() {
@@ -73,7 +112,7 @@ export namespace WebKonsole {
                 this.cursorElement.innerText =
                     this.cursorElement.innerText === this.options.cursor.text
                         ? ""
-                        : this.options.cursor.text;
+                        : this.options.cursor.text ?? "|";
 
                 this.cursorBlinkTimout = setTimeout(blinkChangeState, this.options.cursor.blinkTime);
             };
@@ -82,325 +121,238 @@ export namespace WebKonsole {
         }
 
         registerCommand(command: Command) {
-            this.commands.push(command);
+            const aliases = Array.isArray(command.alias)
+                ? command.alias
+                : [command.alias];
+
+            if (!this.commands.some(c => {
+                const existing = Array.isArray(c.alias) ? c.alias : [c.alias];
+                return aliases.some(alias => existing.includes(alias));
+            })) {
+                this.commands.push(command);
+            }
         }
 
         unregisterCommand(name: string) {
-            let index = this.commands.findIndex(c => c.alias === name);
-
-            while(index !== 0) {
-                this.commands.splice(index, 1);
-                index = this.commands.findIndex(c => c.alias === name);
-            }
+            this.commands = this.commands.filter(c => {
+                const aliases = Array.isArray(c.alias) ? c.alias : [c.alias];
+                return !aliases.includes(name);
+            });
         }
 
         registerDefaultCommands() {
-            this.registerCommand(
-                {
-                    alias: "echo",
-                    run: async (args) => {
-                        args.shift();
-                        if (args.length === 0) return "<err>Usage: echo <text></err>";
-                        return args.join(" ");
+            this.registerCommand({
+                alias: ["echo"],
+                run: async (args) => {
+                    args.shift();
+                    if (args.length === 0) return "{c:red}Usage: echo <text>{/c}";
+                    return args.join(" ");
+                }
+            });
+
+            this.registerCommand({
+                alias: ["clear", "cls"],
+                run: async (args) => {
+                    if (args[1] === "--help") {
+                        return "Clears the terminal screen.";
+                    } else {
+                        this.outputElement.innerHTML = "";
                     }
                 }
-            );
+            });
 
-            this.registerCommand(
-                {
-                    alias: ["clear", "cls"],
-                    run: async (args) => {
-                        if(args[1] == "--help") {
-                            return "Clears the terminal screen."
-                        } else {
-                            this.element.innerHTML = "";
+            this.registerCommand({
+                alias: ["wait", "delay"],
+                run: async (args) => {
+                    if (args[1] === "--help") {
+                        return "Delays for a specified amount of milliseconds.";
+                    } else {
+                        const time = parseInt(args[1], 10);
+                        if (isNaN(time) || time < 0) {
+                            return "{c:red}Usage: wait <milliseconds>{/c}";
                         }
+
+                        await new Promise(res => setTimeout(res, time));
                     }
                 }
-            );
+            });
 
-            this.registerCommand(
-                {
-                    alias: ["wait", "delay"],
-                    run: async (args) => {
-                        if(args[1] == "--help") {
-                            return "Delays for a specified amount of milliseconds"
-                        } else {
-                            const time = parseInt(args[1], 10);
-                            if (isNaN(time) || time < 0) return "<c:red>Usage: wait <milliseconds></c>";
-                            await new Promise(res => setTimeout(res, time));
+            this.registerCommand({
+                alias: ["help", "?"],
+                run: async (args) => {
+                    if (args[1] === "--help") {
+                        return "Displays all available commands.";
+                    }
+
+                    return (
+                        "Available Commands:\n" +
+                        this.commands
+                            .map(c =>
+                                `  ${typeof c.alias === "string" ? c.alias : c.alias.join(" | ")}`
+                            )
+                            .join("\n")
+                    );
+                }
+            });
+
+            this.registerCommand({
+                alias: ["ver", "version"],
+                run: async () => {
+                    return [
+                        "Konsole Info:",
+                        "  Version : {version}",
+                        "  Branch  : {branch}",
+                        "  Dev     : NicholasC"
+                    ].join("\n");
+                }
+            });
+
+            this.registerCommand({
+                alias: ["vars", "variables"],
+                run: async (args) => {
+                    if (args[1] === "--help") {
+                        return "Lists all variables.";
+                    }
+
+                    const vars = Object.entries(this.options.variables);
+
+                    if (vars.length === 0) {
+                        return "{c:red}No variables defined.{/c}";
+                    }
+
+                    return (
+                        "Available Variables:\n" +
+                        vars
+                            .map(([key, value]) =>
+                                `  ${key} = ${
+                                    value.includes("\n")
+                                        ? `[${value.split("\n")[0]}...]`
+                                        : value
+                                }`
+                            )
+                            .join("\n")
+                    );
+                }
+            });
+
+            this.registerCommand({
+                alias: ["about", "abt"],
+                run: async (args) => {
+                    if (args[1] === "--help") {
+                        return "Displays information about WebKonsole.";
+                    }
+
+                    return [
+                        "For use where a console is needed on the web",
+                        "  Created by: NicholasC",
+                        "  ASCII Art Source: {ascii_gen}"
+                    ].join("\n");
+                }
+            });
+
+            this.registerCommand({
+                alias: ["set"],
+                run: async (args) => {
+                    if (args[1] === "--help") {
+                        return "Sets a variable for use in commands.";
+                    }
+
+                    if (args.length < 3) {
+                        return "{c:red}Usage: set <variable> <value>{/c}";
+                    }
+
+                    const [, key, ...valueParts] = args;
+                    const value = valueParts.join(" ");
+
+                    this.options.variables[key] = value;
+
+                    return `Variable ${key} set to "${value}"`;
+                }
+            });
+
+            this.registerCommand({
+                alias: ["run"],
+                run: async (args) => {
+                    if (args[1] === "--help") {
+                        return 'Runs a ".js" script.';
+                    }
+
+                    try {
+                        if (args.length < 2) {
+                            return "{c:red}Usage: run <script location>{/c}";
                         }
-                    }
-                }
-            );
 
-            this.registerCommand(
-                {
-                    alias: ["help", "?"],
-                    run: async (args) => {
-                        if(args[1] == "--help") {
-                            return "Displays all available commands"
-                        } else {
-                            return "Available Commands:\n" + this.commands.map(c => `  ${typeof c.alias === "string" ? c.alias : c.alias.join(" | ")}`).join("\n");
+                        const result = await fetch(args[1]);
+
+                        if (!result.ok) {
+                            return "{c:red}Inaccessible script location{/c}";
                         }
-                    }
-                }
-            );
 
-            this.registerCommand(
-                {
-                    alias: ["ver", "version"],
-                    run: async () => {
-                        return [
-                            "Konsole Info:",
-                            `  Version : {version}`,
-                            `  Branch  : {branch}`,
-                            `  Dev     : NicholasC`
-                        ].join("\n");
-                    }
-                }
-            );
+                        const script = await result.text();
 
-            this.registerCommand(
-                {
-                    alias: ["vars", "variables"],
-                    run: async (args) => {
-                        if(args[1] == "--help") {
-                            return "Lists all variables."
-                        } else {
-                            const vars = Object.entries(this.options.variables);
-                            if (vars.length === 0) return "<err>No variables defined.</err>";
-                            
-                            return "Available Variables:\n" +
-                                vars.map(([key, value]) => `  ${key} = ${value.includes("\n") ? `[${value.split("\n")[0]}...]` : value}`).join("\n");
+                        const blob = new Blob([script], {
+                            type: "text/javascript"
+                        });
+
+                        const url = URL.createObjectURL(blob);
+
+                        const module = await import(url);
+
+                        URL.revokeObjectURL(url);
+
+                        if (typeof module.default !== "function") {
+                            return "{c:red}Script has no default function{/c}";
                         }
-                    }
-                }
-            );
 
-            this.registerCommand(
-                {
-                    alias: ["about", "abt"],
-                    run: async () => {
-                        return [
-                            "For use where a console is needed on the web",
-                            "  Created by: NicholasC",
-                            "  ASCII Art Source: {ascii_gen}"
-                        ].join("\n");
-                    }
-                }
-            );
-
-            this.registerCommand(
-                {
-                    alias: "set",
-                    run: async (args) => {
-                        if(args[1] == "--help") {
-                            return "Sets a variable for use in commands."
-                        } else {
-                            if (args.length < 3) return "<c:red>Usage: set <variable> <value></c>";
-                            const [_, key, ...valueParts] = args;
-                            const value = valueParts.join(" ");
-                            this.options.variables[key] = value;
-                            return `Variable ${key} set to "${value}"`;
+                        return await module.default.call(this);
+                    } catch (err: unknown) {
+                        if (err instanceof Error) {
+                            return `{c:red}Error running script: ${err.message}{/c}`;
                         }
+
+                        return `{c:red}Error running script: ${String(err)}{/c}`;
                     }
                 }
-            );
+            });
 
-            this.registerCommand(
-                {
-                    alias: "run",
-                    run: async (args) => {
-                        if(args[0] == "--help") {
-                            return "Runs a \".js\" script."
-                        } else {
-                            try {
-                                if(args.length < 2) return "<err>Usage: run <script location></err>";
-                                const result = await fetch(args[1])
-                                if(!result.ok) return "<err>Inaccessible script location</err>";
-                                const script = await result.text()
-
-                                const blob = new Blob([script], { type: "text/javascript" });
-                                const url = URL.createObjectURL(blob);
-
-                                const module = await import(url);
-                                URL.revokeObjectURL(url);
-
-                                if (typeof module.default !== "function") {
-                                    return "<err>Script has no default function</err>";
+            this.registerCommand({
+                alias: ["pause"],
+                run: async (args) => {
+                    if(args[1] == "--help") {
+                        return "pauses until the user presses enter."
+                    } else {
+                        this.render("\nPress enter to continue...")
+                        return new Promise((resolve) => {
+                            this.element.addEventListener("keydown", (event)=>{
+                                if(event.key == "Enter") {
+                                    resolve();
                                 }
-
-                                return await module.default.call(this);
-                            } catch(err: unknown) {
-                                if (err instanceof Error) {
-                                    return `<err>Error running script: ${err.message}</err>`;
-                                }
-                                return `<err>Error running script: ${String(err)}</err>`;
-                            }
-                        }
+                            });
+                        });
                     }
                 }
-            )
+            });
+        }
 
-            this.registerCommand(
-                {    
-                    alias: "pause",
-                    run: async (args) => {
-                        if(args[1] == "--help") {
-                            return "pauses until the user presses enter."
-                        } else {
-                            this.element.innerText += "Press enter to continue..."
-                            return new Promise((resolve) => {
-                                this.element.addEventListener("keydown", (event)=>{
-                                    if(event.key == "Enter") {
-                                        resolve();
-                                    }
-                                });
-                            })
-                        }
-                    }
-                }
+        render(text: string) {
+            text = text.replace(
+                /\{([a-zA-Z_][a-zA-Z0-9_]*)\}/g,
+                (_, name: string) => this.options.variables[name] ?? `{${name}}`
             );
-        }
 
-        async formatInput(text: string) {
-            let prev = "";
+            text = text.replace(
+                /\{c:([^}]+)\}([\s\S]*?)\{\/c\}/g,
+                (_, color, content) =>
+                    `<span style="color:${color}">${content}</span>`
+            );
 
-            while (text !== prev) {
-                prev = text;
-                for (const [key, value] of Object.entries(this.options.variables)) {
-                    text = text.replaceAll(`{${key}}`, value);
-                }
-            }
+            text = text.replace(
+                /\{a:(https?:\/\/[^\s}]+)\}([\s\S]*?)\{\/a\}/g,
+                (_, url, content) =>
+                    `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color:#4f4ff7">${content}</a>`
+            );
 
-            return text.replaceAll("\\n", "\n");
-        }
-
-        formatOutput(text: string) {
-            let out = text
-                .replaceAll(/&/g, "&amp;")
-                .replaceAll(/</g, "&lt;")
-                .replaceAll(/>/g, "&gt;");
-
-            out = out.replaceAll(
-                /&lt;c:([^&]+?)&gt;([\s\S]*?)&lt;\/c&gt;/g,
-                (_, color:string, content:string) => `<span style="color:${color}">${content}</span>`
-            ); // colors
-
-            out = out.replaceAll(
-                /(https?:\/\/[^\s]+)/g,
-                `<a href="$1" target="_blank" rel="noopener noreferrer" style="color:#4f4ff7">$1</a>`
-            ); // links
-
-            return out;
-        }
-
-        setupInputHandler() {
-            this.element.setAttribute("tabindex", "0");
-
-            this.element.addEventListener("keydown", async (e) => {
-                e.preventDefault();
-                clearTimeout(this.cursorBlinkTimout);
-                this.cursorElement.innerHTML = this.options.cursor.text;
-                this.startCursorBlink();
-                
-                if (this.commandRunning) return; // prevent anything after this to run if a command is already running
-
-                switch (e.key) {
-                    case "Enter":
-                        if(e.shiftKey) {
-                            this.inputElement.innerText += "\n";
-                        } else {
-                            const inputText = this.inputElement.innerText;
-
-                            this.inputElement.innerText = "";
-                            
-                            if (inputText.trim().length > 0) {
-                                if (this.history.entries[0] !== input) this.history.entries.unshift(input);
-                                this.history.index = 0;
-                                await this.runCommand(input);
-                            }
-                        }
-                        break;
-
-                    case "Backspace":
-                        this.input.text = input.slice(0,-1)
-                        break;
-
-                    case "ArrowUp":
-                        this.navigateHistory(-1);
-                        break;
-
-                    case "ArrowDown":
-                        this.navigateHistory(1);
-                        break;
-
-                    default:
-                        if (e.ctrlKey && e.key.toLowerCase() === "l") {
-                            this.container.innerHTML = "";
-                        } else if (e.ctrlKey && e.key.toLowerCase() === "v") {
-                            const text = await navigator.clipboard.readText();
-                            this.input.text += text;
-                        } else if (e.key.length === 1 && !e.ctrlKey && !e.altKey) {
-                            this.input.text += e.key;
-                        }
-                        break;
-                }
-
-                this.scrollToBottom();
-                this.update();
-            });
-
-            this.container.addEventListener("focus", () => {
-                this.focused = true;
-                this.resetCursorBlink();
-                this.update();
-            });
-
-            this.container.addEventListener("blur", () => {
-                this.focused = false;
-                this.update();
-            });
-        }
-
-        navigateHistory(direction: number) {
-            this.history.index = Math.max(0, Math.min(this.history.index - direction, this.history.entries.length));
-            const entry = this.history.entries[this.history.index - 1] || "";
-            this.input.text = entry;
-        }
-
-        async parseCommand(inputText: string = ""): Command {
-            const parts = tokenize(inputText, ";");
-
-            for (const part of parts) {
-                const replacedLine = await this.formatInput(part);
-
-                const args = replacedLine.split(" ");
-                const alias = args.shift();
-
-                if(!alias) continue;
-                const command = getCommands().find(cmd => cmd.alias == alias);
-                if(this.container.innerText != "") this.update("\n");
-
-                if (command) {
-                    if(this.exitCommand) return
-                    const result = await command.run.call(this, args);
-                    if(this.exitCommand) return
-                    if (result) {
-                        this.update(await this.formatInput(result));
-                    }
-                } else {
-                    this.update(`<err>Unknown command: "${alias}"</err>`);
-                }
-            }
-
-            if(this.exitCommand) return
-
-            if(this.container.innerText != "") this.update("\n");
-            if(!inline) this.update(this.options.prefix);
-            this.commandRunning = false;
-            this.cursor.hidden = false;
+            this.outputElement.insertAdjacentHTML("afterbegin", text);
         }
     }
 }

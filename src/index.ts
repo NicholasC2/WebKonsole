@@ -1,3 +1,3 @@
-import { Konsole } from "./Konsole";
+import { WebKonsole } from "./Konsole";
 
-(globalThis as any).Konsole = Konsole;
+(globalThis as any).WebKonsole = WebKonsole;
