@@ -6,7 +6,7 @@ const defaultOptions: WebKonsole.Options = {
         text: "|"
     },
     initCommand: "echo {version_ascii}\n{version}-{branch}",
-    prefix: "$",
+    prefix: "$ ",
     variables: {
         "version": "1.0.07",
         "version_ascii": `\
@@ -36,12 +36,11 @@ export namespace WebKonsole {
     export class Instance {
         private options: Options;
         private outputElement = document.createElement("div");
+        private inputOuter = document.createElement("div");
         private prefixElement = document.createElement("div");
-        private inputElement = document.createElement("div");
-        private cursorElement = document.createElement("div");
+        private inputElement = document.createElement("input");
         private commandRunning: boolean = false;
         private commands: Command[] = [];
-        private cursorBlinkTimout?: number;
 
         constructor(
             public element: HTMLElement, 
@@ -61,14 +60,10 @@ export namespace WebKonsole {
                 }
             }
 
-            this.startCursorBlink();
-
             Object.assign(this.element.style, {
                 backgroundColor: "black",
                 boxSizing: "border-box",
-                color: "lime",
                 cursor: "text",
-                fontFamily: "monospace",
                 whiteSpace: "pre-wrap",
                 overflowWrap: "break-word",
                 padding: "5px",
@@ -76,14 +71,63 @@ export namespace WebKonsole {
                 height: "100%",
                 overflowY: "auto",
                 textAlign: "left",
+                fontFamily: "monospace",
+                color: "lime",
+                fontSize: "medium",
             } satisfies Partial<CSSStyleDeclaration>);
+
+            Object.assign(this.inputElement.style, {
+                background: "transparent",
+                border: "none",
+                outline: "none",
+                width: "100%",
+                flex: "1",
+                caretColor: "lime",
+                fontFamily: "monospace",
+                color: "lime",
+                padding: "0",
+                fontSize: "medium",
+            } satisfies Partial<CSSStyleDeclaration>);
+
+            Object.assign(this.inputOuter.style, {
+                display: "inline-flex",
+                flexDirection: "row",
+                width: "100%"
+            } satisfies Partial<CSSStyleDeclaration>)
             
-            this.prefixElement.innerText = this.options.prefix;
             this.element.appendChild(this.outputElement);
-            this.element.appendChild(this.prefixElement);
-            this.element.appendChild(this.inputElement);
-            this.cursorElement.style.userSelect = "none";
-            this.element.appendChild(this.cursorElement);
+            this.element.appendChild(this.inputOuter);
+
+            this.prefixElement.innerText = this.options.prefix;
+
+            this.inputOuter.appendChild(this.prefixElement);
+            this.inputOuter.appendChild(this.inputElement);
+
+            this.inputElement.onkeydown = async(event) => {
+                if(event.key === "Enter" && !event.shiftKey) {
+                    this.render(this.prefixElement.innerText+this.inputElement.value+"\n");
+
+                    await this.exec(tokenize(this.inputElement.value));
+
+                    this.inputElement.value = "";
+
+                    this.prefixElement.innerText = this.options.prefix;
+                }
+            }
+
+            let pos = {x:0,y:0}
+
+            this.element.onmousedown = (event) => {
+                pos = {x: event.clientX, y: event.clientY}
+            }
+
+            this.element.onmouseup = (event) => {
+                const dist = Math.hypot((pos.x - event.clientX), (pos.y - event.clientY));
+
+                if(Math.abs(dist) < 5) {
+                    this.inputElement.focus();
+                }
+            }
 
             this.registerDefaultCommands();
 
@@ -91,6 +135,11 @@ export namespace WebKonsole {
         }
 
         async exec(command: string[]) {
+            if(command.length === 0 || command[0].length === 0) {
+                this.render("");
+                return;
+            };
+
             const cmd = this.commands.find(c => c.alias.includes(command[0]));
 
             if(cmd) {
@@ -105,19 +154,8 @@ export namespace WebKonsole {
             } else {
                 this.render(`{c:red}Command not found: "${command[0]}"{/c}`)
             }
-        }
 
-        startCursorBlink() {
-            const blinkChangeState = () => {
-                this.cursorElement.innerText =
-                    this.cursorElement.innerText === this.options.cursor.text
-                        ? ""
-                        : this.options.cursor.text ?? "|";
-
-                this.cursorBlinkTimout = setTimeout(blinkChangeState, this.options.cursor.blinkTime);
-            };
-
-            blinkChangeState();
+            this.render("\n");
         }
 
         registerCommand(command: Command) {
@@ -352,7 +390,7 @@ export namespace WebKonsole {
                     `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color:#4f4ff7">${content}</a>`
             );
 
-            this.outputElement.insertAdjacentHTML("afterbegin", text);
+            this.outputElement.insertAdjacentHTML("beforeend", text);
         }
     }
 }

@@ -49,7 +49,7 @@
       text: "|"
     },
     initCommand: "echo {version_ascii}\n{version}-{branch}",
-    prefix: "$",
+    prefix: "$ ",
     variables: {
       "version": "1.0.07",
       "version_ascii": `:::    ::: ::::::::  ::::    :::  ::::::::   ::::::::  :::        :::::::::: 
@@ -71,9 +71,9 @@
         this.element = element;
         this.commandHistory = commandHistory;
         this.outputElement = document.createElement("div");
+        this.inputOuter = document.createElement("div");
         this.prefixElement = document.createElement("div");
-        this.inputElement = document.createElement("div");
-        this.cursorElement = document.createElement("div");
+        this.inputElement = document.createElement("input");
         this.commandRunning = false;
         this.commands = [];
         this.options = {
@@ -88,31 +88,70 @@
             ...options == null ? void 0 : options.variables
           }
         };
-        this.startCursorBlink();
         Object.assign(this.element.style, {
           backgroundColor: "black",
           boxSizing: "border-box",
-          color: "lime",
           cursor: "text",
-          fontFamily: "monospace",
           whiteSpace: "pre-wrap",
           overflowWrap: "break-word",
           padding: "5px",
           width: "100%",
           height: "100%",
           overflowY: "auto",
-          textAlign: "left"
+          textAlign: "left",
+          fontFamily: "monospace",
+          color: "lime",
+          fontSize: "medium"
         });
-        this.prefixElement.innerText = this.options.prefix;
+        Object.assign(this.inputElement.style, {
+          background: "transparent",
+          border: "none",
+          outline: "none",
+          width: "100%",
+          flex: "1",
+          caretColor: "lime",
+          fontFamily: "monospace",
+          color: "lime",
+          padding: "0",
+          fontSize: "medium"
+        });
+        Object.assign(this.inputOuter.style, {
+          display: "inline-flex",
+          flexDirection: "row",
+          width: "100%"
+        });
         this.element.appendChild(this.outputElement);
-        this.element.appendChild(this.prefixElement);
-        this.element.appendChild(this.inputElement);
-        this.cursorElement.style.userSelect = "none";
-        this.element.appendChild(this.cursorElement);
+        this.element.appendChild(this.inputOuter);
+        this.prefixElement.innerText = this.options.prefix;
+        this.inputOuter.appendChild(this.prefixElement);
+        this.inputOuter.appendChild(this.inputElement);
+        this.inputElement.onkeydown = async (event) => {
+          if (event.key === "Enter" && !event.shiftKey) {
+            this.render(this.prefixElement.innerText + this.inputElement.value + "\n");
+            await this.exec(tokenize(this.inputElement.value));
+            this.inputElement.value = "";
+            this.prefixElement.innerText = this.options.prefix;
+          }
+        };
+        let pos = { x: 0, y: 0 };
+        this.element.onmousedown = (event) => {
+          pos = { x: event.clientX, y: event.clientY };
+        };
+        this.element.onmouseup = (event) => {
+          const dist = Math.hypot(pos.x - event.clientX, pos.y - event.clientY);
+          if (Math.abs(dist) < 5) {
+            this.inputElement.focus();
+          }
+        };
         this.registerDefaultCommands();
         this.exec(tokenize(this.options.initCommand));
       }
       async exec(command) {
+        if (command.length === 0 || command[0].length === 0) {
+          this.render("");
+          return;
+        }
+        ;
         const cmd = this.commands.find((c) => c.alias.includes(command[0]));
         if (cmd) {
           this.commandRunning = true;
@@ -124,14 +163,7 @@
         } else {
           this.render(`{c:red}Command not found: "${command[0]}"{/c}`);
         }
-      }
-      startCursorBlink() {
-        const blinkChangeState = () => {
-          var _a;
-          this.cursorElement.innerText = this.cursorElement.innerText === this.options.cursor.text ? "" : (_a = this.options.cursor.text) != null ? _a : "|";
-          this.cursorBlinkTimout = setTimeout(blinkChangeState, this.options.cursor.blinkTime);
-        };
-        blinkChangeState();
+        this.render("\n");
       }
       registerCommand(command) {
         const aliases = Array.isArray(command.alias) ? command.alias : [command.alias];
@@ -313,7 +345,7 @@
           /\{a:(https?:\/\/[^\s}]+)\}([\s\S]*?)\{\/a\}/g,
           (_, url, content) => `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color:#4f4ff7">${content}</a>`
         );
-        this.outputElement.insertAdjacentHTML("afterbegin", text);
+        this.outputElement.insertAdjacentHTML("beforeend", text);
       }
     }
     WebKonsole2.Instance = Instance;
