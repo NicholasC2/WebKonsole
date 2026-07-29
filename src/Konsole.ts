@@ -104,6 +104,8 @@ export namespace WebKonsole {
             this.inputOuter.appendChild(this.inputElement);
 
             this.inputElement.onkeydown = async(event) => {
+                if(this.commandRunning) return;
+
                 if(event.key === "Enter" && !event.shiftKey) {
                     this.render(this.prefixElement.innerText+this.inputElement.value+"\n");
 
@@ -144,6 +146,7 @@ export namespace WebKonsole {
 
             if(cmd) {
                 this.commandRunning = true;
+                this.inputOuter.style.display = "none";
                 const result = await cmd.run(command);
 
                 if(result) {
@@ -151,6 +154,9 @@ export namespace WebKonsole {
                 }
 
                 this.commandRunning = false;
+                this.inputOuter.style.display = "inline-flex";
+                
+                this.inputElement.focus();
             } else {
                 this.render(`{c:red}Command not found: "${command[0]}"{/c}`)
             }

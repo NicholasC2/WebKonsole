@@ -126,6 +126,7 @@
         this.inputOuter.appendChild(this.prefixElement);
         this.inputOuter.appendChild(this.inputElement);
         this.inputElement.onkeydown = async (event) => {
+          if (this.commandRunning) return;
           if (event.key === "Enter" && !event.shiftKey) {
             this.render(this.prefixElement.innerText + this.inputElement.value + "\n");
             await this.exec(tokenize(this.inputElement.value));
@@ -155,11 +156,14 @@
         const cmd = this.commands.find((c) => c.alias.includes(command[0]));
         if (cmd) {
           this.commandRunning = true;
+          this.inputOuter.style.display = "none";
           const result = await cmd.run(command);
           if (result) {
             this.render(result);
           }
           this.commandRunning = false;
+          this.inputOuter.style.display = "inline-flex";
+          this.inputElement.focus();
         } else {
           this.render(`{c:red}Command not found: "${command[0]}"{/c}`);
         }
