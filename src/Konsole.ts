@@ -8,7 +8,7 @@ const defaultOptions: WebKonsole.Options = {
     initCommand: "echo {version_ascii}\n{version}-{branch}",
     prefix: "$ ",
     variables: {
-        "version": "1.0.07",
+        "version": "1.0.08",
         "version_ascii": `\
 :::    ::: ::::::::  ::::    :::  ::::::::   ::::::::  :::        :::::::::: 
 :+:   :+: :+:    :+: :+:+:   :+: :+:    :+: :+:    :+: :+:        :+:        
@@ -45,7 +45,8 @@ export namespace WebKonsole {
         constructor(
             public element: HTMLElement, 
             options?: Partial<Options>,
-            public commandHistory: Command[] = []
+            public commandHistory: string[][] = [],
+            public commandIndex = 0,
         ) {
             this.options = {
                 ...defaultOptions,
@@ -105,15 +106,36 @@ export namespace WebKonsole {
 
             this.inputElement.onkeydown = async(event) => {
                 if(this.commandRunning) return;
-
+                
                 if(event.key === "Enter" && !event.shiftKey) {
+                    event.preventDefault();
+                    if(this.inputElement.value.trim().length > 0 && this.commandHistory[this.commandHistory.length - 1] != this.inputElement.value) {
+                        this.commandHistory.push(this.inputElement.value);
+                        this.commandIndex = this.commandHistory.length
+                    }
+
                     this.render(this.prefixElement.innerText+this.inputElement.value+"\n");
-
                     await this.exec(tokenize(this.inputElement.value));
-
                     this.inputElement.value = "";
-
                     this.prefixElement.innerText = this.options.prefix;
+                }
+
+                const commandHistory = [...this.commandHistory, ""];
+                if(event.key === "ArrowUp") {
+                    if(this.commandIndex > 0) {
+                        this.commandIndex--
+                    }
+
+                    this.inputElement.value = commandHistory[this.commandIndex]
+                    event.preventDefault();
+                }
+                if(event.key === "ArrowDown") {
+                    if(this.commandIndex < this.commandHistory.length) {
+                        this.commandIndex++
+                    }
+
+                    this.inputElement.value = commandHistory[this.commandIndex]
+                    event.preventDefault();
                 }
             }
 

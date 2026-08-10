@@ -51,7 +51,7 @@
     initCommand: "echo {version_ascii}\n{version}-{branch}",
     prefix: "$ ",
     variables: {
-      "version": "1.0.07",
+      "version": "1.0.08",
       "version_ascii": `:::    ::: ::::::::  ::::    :::  ::::::::   ::::::::  :::        :::::::::: 
 :+:   :+: :+:    :+: :+:+:   :+: :+:    :+: :+:    :+: :+:        :+:        
 +:+  +:+  +:+    +:+ :+:+:+  +:+ +:+        +:+    +:+ +:+        +:+        
@@ -67,9 +67,10 @@
   var WebKonsole;
   ((WebKonsole2) => {
     class Instance {
-      constructor(element, options, commandHistory = []) {
+      constructor(element, options, commandHistory = [], commandIndex = 0) {
         this.element = element;
         this.commandHistory = commandHistory;
+        this.commandIndex = commandIndex;
         this.outputElement = document.createElement("div");
         this.inputOuter = document.createElement("div");
         this.prefixElement = document.createElement("div");
@@ -128,10 +129,30 @@
         this.inputElement.onkeydown = async (event) => {
           if (this.commandRunning) return;
           if (event.key === "Enter" && !event.shiftKey) {
+            event.preventDefault();
+            if (this.inputElement.value.trim().length > 0 && this.commandHistory[this.commandHistory.length - 1] != this.inputElement.value) {
+              this.commandHistory.push(this.inputElement.value);
+              this.commandIndex = this.commandHistory.length;
+            }
             this.render(this.prefixElement.innerText + this.inputElement.value + "\n");
             await this.exec(tokenize(this.inputElement.value));
             this.inputElement.value = "";
             this.prefixElement.innerText = this.options.prefix;
+          }
+          const commandHistory2 = [...this.commandHistory, ""];
+          if (event.key === "ArrowUp") {
+            if (this.commandIndex > 0) {
+              this.commandIndex--;
+            }
+            this.inputElement.value = commandHistory2[this.commandIndex];
+            event.preventDefault();
+          }
+          if (event.key === "ArrowDown") {
+            if (this.commandIndex < this.commandHistory.length) {
+              this.commandIndex++;
+            }
+            this.inputElement.value = commandHistory2[this.commandIndex];
+            event.preventDefault();
           }
         };
         let pos = { x: 0, y: 0 };
