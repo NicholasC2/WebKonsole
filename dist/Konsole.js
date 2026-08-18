@@ -117,7 +117,7 @@
         this.prefixElement.innerText = this.options.prefix;
         this.inputOuter.appendChild(this.prefixElement);
         this.inputOuter.appendChild(this.inputElement);
-        this.inputElement.addEventListener("keydown", async (event) => {
+        this.inputElement.onkeydown = async (event) => {
           if (this.commandRunning) return;
           if (event.key === "Enter" && !event.shiftKey) {
             event.preventDefault();
@@ -145,7 +145,7 @@
             this.inputElement.value = commandHistory2[this.commandIndex];
             event.preventDefault();
           }
-        });
+        };
         let pos = { x: 0, y: 0 };
         this.element.onmousedown = (event) => {
           pos = { x: event.clientX, y: event.clientY };
