@@ -48,19 +48,10 @@
       blinkTime: 500,
       text: "|"
     },
-    initCommand: "echo {version_ascii}\n{version}-{branch}",
+    initCommand: "echo {version}-{branch}",
     prefix: "$ ",
     variables: {
       "version": "1.0.08",
-      "version_ascii": `:::    ::: ::::::::  ::::    :::  ::::::::   ::::::::  :::        :::::::::: 
-:+:   :+: :+:    :+: :+:+:   :+: :+:    :+: :+:    :+: :+:        :+:        
-+:+  +:+  +:+    +:+ :+:+:+  +:+ +:+        +:+    +:+ +:+        +:+        
-+#++:++   +#+    +:+ +#+ +:+ +#+ +#++:++#++ +#+    +:+ +#+        +#++:++#   
-+#+  +#+  +#+    +#+ +#+  +#+#+#        +#+ +#+    +#+ +#+        +#+        
-#+#   #+# #+#    #+# #+#   #+#+# #+#    #+# #+#    #+# #+#        #+#        
-###    ### ########  ###    ####  ########   ########  ########## ########## `,
-      // https://patorjk.com/software/taag/#p=display&f=Alligator2&t=Konsole
-      "ascii_gen": "https://patorjk.com/software/taag/",
       "branch": "stable"
     }
   };
@@ -126,7 +117,7 @@
         this.prefixElement.innerText = this.options.prefix;
         this.inputOuter.appendChild(this.prefixElement);
         this.inputOuter.appendChild(this.inputElement);
-        this.inputElement.onkeydown = async (event) => {
+        this.inputElement.addEventListener("keydown", async (event) => {
           if (this.commandRunning) return;
           if (event.key === "Enter" && !event.shiftKey) {
             event.preventDefault();
@@ -154,7 +145,7 @@
             this.inputElement.value = commandHistory2[this.commandIndex];
             event.preventDefault();
           }
-        };
+        });
         let pos = { x: 0, y: 0 };
         this.element.onmousedown = (event) => {
           pos = { x: event.clientX, y: event.clientY };
@@ -333,23 +324,6 @@
                 return `{c:red}Error running script: ${err.message}{/c}`;
               }
               return `{c:red}Error running script: ${String(err)}{/c}`;
-            }
-          }
-        });
-        this.registerCommand({
-          alias: ["pause"],
-          run: async (args) => {
-            if (args[1] == "--help") {
-              return "pauses until the user presses enter.";
-            } else {
-              this.render("\nPress enter to continue...");
-              return new Promise((resolve) => {
-                this.element.addEventListener("keydown", (event) => {
-                  if (event.key == "Enter") {
-                    resolve();
-                  }
-                });
-              });
             }
           }
         });
