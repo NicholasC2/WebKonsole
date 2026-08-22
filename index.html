@@ -7,16 +7,8 @@
         <div class="konsole"></div>
         <script src="dist/Konsole.js"></script>
         <script>
-            let searchObject = {};
-            const searchText = location.search.slice(1);
-            searchText.split("&").forEach(searchPart => {
-                const [key, value] = searchPart.split("=");
-                searchObject[key] = decodeURI(value);
-            });
-
             const container = document.querySelector(".konsole")
-            const terminal = new WebKonsole.Instance(container, searchObject)
+            const terminal = new WebKonsole.Instance(container)
         </script>
-        <div style="font-family: monospace;position: sticky;bottom: 10px;color: white;opacity: 50%;">Copyright © 2026 NicholasC</div>
     </body>
 </html>
