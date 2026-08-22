@@ -8,7 +8,7 @@ const defaultOptions: WebKonsole.Options = {
     initCommand: "echo {version}-{branch}",
     prefix: "$ ",
     variables: {
-        "version": "1.0.08",
+        "version": "1.0.09",
         "branch": "stable"
     }
 }
