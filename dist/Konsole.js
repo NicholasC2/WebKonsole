@@ -267,19 +267,6 @@
           }
         });
         this.registerCommand({
-          alias: ["about", "abt"],
-          run: async (args) => {
-            if (args[1] === "--help") {
-              return "Displays information about WebKonsole.";
-            }
-            return [
-              "For use where a console is needed on the web",
-              "  Created by: NicholasC",
-              "  ASCII Art Source: {ascii_gen}"
-            ].join("\n");
-          }
-        });
-        this.registerCommand({
           alias: ["set"],
           run: async (args) => {
             if (args[1] === "--help") {
@@ -333,18 +320,45 @@
           /\{([a-zA-Z_][a-zA-Z0-9_]*)\}/g,
           (_, name) => {
             var _a;
-            return (_a = this.options.variables[name]) != null ? _a : `{${name}}`;
+            return String((_a = this.options.variables[name]) != null ? _a : `{${name}}`);
           }
         );
-        text = text.replace(
-          /\{c:([^}]+)\}([\s\S]*?)\{\/c\}/g,
-          (_, color, content) => `<span style="color:${color}">${content}</span>`
-        );
-        text = text.replace(
-          /\{a:(https?:\/\/[^\s}]+)\}([\s\S]*?)\{\/a\}/g,
-          (_, url, content) => `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color:#4f4ff7">${content}</a>`
-        );
-        this.outputElement.insertAdjacentHTML("beforeend", text);
+        const fragment = document.createDocumentFragment();
+        const markup = /\{c:([^}]+)\}([\s\S]*?)\{\/c\}|\{a:(https?:\/\/[^\s}]+)\}([\s\S]*?)\{\/a\}/g;
+        let lastIndex = 0;
+        let match;
+        while ((match = markup.exec(text)) !== null) {
+          if (match.index > lastIndex) {
+            fragment.appendChild(
+              document.createTextNode(text.slice(lastIndex, match.index))
+            );
+          }
+          if (match[1] !== void 0) {
+            const color = match[1].trim();
+            const content = match[2];
+            const span = document.createElement("span");
+            span.style.color = color;
+            span.textContent = content;
+            fragment.appendChild(span);
+          } else {
+            const url = match[3];
+            const content = match[4];
+            const anchor = document.createElement("a");
+            anchor.href = url;
+            anchor.target = "_blank";
+            anchor.rel = "noopener noreferrer";
+            anchor.style.color = "#4f4ff7";
+            anchor.textContent = content;
+            fragment.appendChild(anchor);
+          }
+          lastIndex = markup.lastIndex;
+        }
+        if (lastIndex < text.length) {
+          fragment.appendChild(
+            document.createTextNode(text.slice(lastIndex))
+          );
+        }
+        this.outputElement.appendChild(fragment);
       }
     }
     WebKonsole2.Instance = Instance;
